@@ -338,6 +338,7 @@ services:
         - ADDITIONAL_SERVER_NAMES=${ADDITIONAL_SERVER_NAMES:-}
       volumes:
         - ./data/web:/web:ro,z
+        - ./data/webdav:/webdav:ro
         - ./data/conf/rspamd/dynmaps:/dynmaps:ro,z
         - ./data/assets/ssl/:/etc/ssl/mail/:ro,z
         - ./data/conf/nginx/:/etc/nginx/conf.d/:z
@@ -528,6 +529,29 @@ services:
           aliases:
             - olefy
 
+    php-fpm-webdav:
+      image: rohwerj/phpfpm-webdav:1.0
+      build: ./data/Dockerfiles/phpfpm-webdav
+      command: "php-fpm -d date.timezone=${TZ} -d expose_php=0"
+      volumes:
+        - ./data/webdav:/webdav:rw
+        - webdav-vol-1:/sabredav/public:rw
+        - ./data/conf/phpfpm/php-fpm.d/pools.conf:/usr/local/etc/php-fpm.d/z-pools.conf
+        - ./data/conf/phpfpm/php-conf.d/opcache-recommended.ini:/usr/local/etc/php/conf.d/opcache-recommended.ini
+        - ./data/conf/phpfpm/php-conf.d/upload.ini:/usr/local/etc/php/conf.d/upload.ini
+        - ./data/conf/phpfpm/php-conf.d/other.ini:/usr/local/etc/php/conf.d/zzz-other.ini
+      environment:
+        - LOG_LINES=${LOG_LINES:-9999}
+        - TZ=${TZ}
+        - MAILCOW_HOSTNAME=${MAILCOW_HOSTNAME}
+      restart: always
+      dns:
+        - ${IPV4_NETWORK:-172.22.1}.254
+      networks:
+        mailcow-network:
+          aliases:
+            - phpfpm-webdav
+
     ejabberd-mailcow:
       image: mailcow/ejabberd:1.5
       volumes:
@@ -570,6 +594,7 @@ services:
         - clamd-mailcow
         - rspamd-mailcow
         - php-fpm-mailcow
+        - php-fpm-webdav
         - sogo-mailcow
         - dovecot-mailcow
         - postfix-mailcow
@@ -618,3 +643,4 @@ volumes:
   sogo-userdata-backup-vol-1:
   xmpp-vol-1:
   xmpp-upload-vol-1:
+  webdav-vol-1:
