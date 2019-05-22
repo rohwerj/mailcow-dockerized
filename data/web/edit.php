@@ -1474,6 +1474,100 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         <?php
         }
       }
+    elseif (isset($_GET['retrievaljob']) &&
+      is_numeric($_GET['retrievaljob'])) {
+        $id = $_GET["retrievaljob"];
+        $result = mailbox('get', 'retrievaljob_details', $id);
+        if (!empty($result)) {
+        ?>
+          <h4><?=$lang['edit']['retrievaljob'];?></h4>
+          <form class="form-horizontal" data-id="editretrievaljob" role="form" method="post">
+            <input type="hidden" value="0" name="delete_mail">
+            <input type="hidden" value="0" name="use_ssl">
+            <input type="hidden" value="0" name="read_all">
+            <input type="hidden" value="0" name="active">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="host"><?=$lang['edit']['hostname'];?></label>
+              <div class="col-sm-10">
+              <input type="text" class="form-control" name="host" id="host" value="<?=htmlspecialchars($result['host'], ENT_QUOTES, 'UTF-8');?>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="port">Port</label>
+              <div class="col-sm-10">
+              <input type="number" class="form-control" name="port" id="port" min="1" max="65535" value="<?=htmlspecialchars($result['port'], ENT_QUOTES, 'UTF-8');?>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="user"><?=$lang['edit']['username'];?></label>
+              <div class="col-sm-10">
+              <input type="text" class="form-control" name="user" id="user" value="<?=htmlspecialchars($result['user'], ENT_QUOTES, 'UTF-8');?>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?></label>
+              <div class="col-sm-10">
+              <input type="password" class="form-control" name="password" id="password" value="<?=htmlspecialchars($result['password'], ENT_QUOTES, 'UTF-8');?>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="protocol"><?=$lang['edit']['protocol'];?>:</label>
+              <div class="col-sm-10">
+                <select id="protocol" name="protocol">
+                  <option <?=($result['protocol'] == "POP3") ? "selected" : null;?>>POP3</option>
+                  <option <?=($result['protocol'] == "IMAP") ? "selected" : null;?>>IMAP</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="mins_interval"><?=$lang['edit']['mins_interval'];?></label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" name="mins_interval" min="1" max="3600" value="<?=htmlspecialchars($result['mins_interval'], ENT_QUOTES, 'UTF-8');?>" required>
+                <small class="help-block">10-3600</small>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                <label><input type="checkbox" value="1" name="delete_mail" <?=($result['delete_mail']=="1") ? "checked" : "";?>> <?=$lang['edit']['delete1'];?></label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                <label><input type="checkbox" value="1" name="read_all" <?=($result['read_all']=="1") ? "checked" : "";?>> <?=$lang['edit']['read_all'];?></label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                <label><input type="checkbox" value="1" name="use_ssl" <?=($result['use_ssl']=="1") ? "checked" : "";?>> <?=$lang['edit']['use_ssl'];?></label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                <label><input type="checkbox" value="1" name="active" <?=($result['active_int']=="1") ? "checked" : "";?>> <?=$lang['edit']['active'];?></label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button class="btn btn-success" data-action="edit_selected" data-id="editretrievaljob" data-item="<?=htmlspecialchars($result['id']);?>" data-api-url='edit/retrievaljob' data-api-attr='{}' href="#"><?=$lang['edit']['save'];?></button>
+              </div>
+            </div>
+          </form>
+        <?php
+        }
+        else {
+        ?>
+          <div class="alert alert-info" role="alert"><?=$lang['info']['no_action'];?></div>
+        <?php
+        }
+      }
     elseif (isset($_GET['filter']) &&
       is_numeric($_GET['filter'])) {
         $id = $_GET["filter"];

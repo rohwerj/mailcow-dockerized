@@ -35,7 +35,7 @@ if (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == 'doma
       </div>
     </div>
     <hr>
-    
+
     <? // TFA ?>
     <div class="row">
       <div class="col-sm-3 col-xs-5 text-right"><?=$lang['tfa']['tfa'];?></div>
@@ -162,6 +162,7 @@ elseif (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == '
     <li role="presentation"><a href="#SpamAliases" aria-controls="SpamAliases" role="tab" data-toggle="tab"><?=$lang['user']['spam_aliases'];?></a></li>
     <li role="presentation"><a href="#Spamfilter" aria-controls="Spamfilter" role="tab" data-toggle="tab"><?=$lang['user']['spamfilter'];?></a></li>
     <li role="presentation"><a href="#Syncjobs" aria-controls="Syncjobs" role="tab" data-toggle="tab"><?=$lang['user']['sync_jobs'];?></a></li>
+    <li role="presentation"><a href="#Retrievaljobs" aria-controls="Retrievaljobs" role="tab" data-toggle="tab"><?=$lang['user']['retrieval_jobs'];?></a></li>
     <li role="presentation"><a href="#AppPasswds" aria-controls="AppPasswds" role="tab" data-toggle="tab"><?=$lang['user']['app_passwds'];?></a></li>
     <li role="presentation"><a href="#Pushover" aria-controls="Pushover" role="tab" data-toggle="tab">Pushover API</a></li>
   </ul>
@@ -576,6 +577,24 @@ elseif (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == '
         <a class="btn btn-sm btn-success" href="#" data-toggle="modal" data-target="#addSyncJobModal"><span class="glyphicon glyphicon-plus"></span> <?=$lang['user']['create_syncjob'];?></a>
       </div>
     </div>
+		</div>
+	<div role="tabpanel" class="tab-pane" id="Retrievaljobs">
+		<div class="table-responsive">
+      <table class="table table-striped" id="retrieval_job_table"></table>
+		</div>
+    <div class="mass-actions-user">
+      <div class="btn-group" data-acl="<?=$_SESSION['acl']['retrievaljobs'];?>">
+        <a class="btn btn-sm btn-default" id="toggle_multi_select_all" data-id="retrievaljob" href="#"><span class="glyphicon glyphicon-check" aria-hidden="true"></span> <?=$lang['mailbox']['toggle_all'];?></a>
+        <a class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" href="#"><?=$lang['mailbox']['quick_actions'];?> <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li><a data-action="edit_selected" data-id="retrievaljob" data-api-url='edit/retrievaljob' data-api-attr='{"active":"1"}' href="#"><?=$lang['mailbox']['activate'];?></a></li>
+          <li><a data-action="edit_selected" data-id="retrievaljob" data-api-url='edit/retrievaljob' data-api-attr='{"active":"0"}' href="#"><?=$lang['mailbox']['deactivate'];?></a></li>
+          <li role="separator" class="divider"></li>
+          <li><a data-action="delete_selected" data-id="retrievaljob" data-api-url='delete/retrievaljob' href="#"><?=$lang['mailbox']['remove'];?></a></li>
+        </ul>
+        <a class="btn btn-sm btn-success" href="#" data-toggle="modal" data-target="#addRetrievalJobModal"><span class="glyphicon glyphicon-plus"></span> <?=$lang['user']['create_retrievaljob'];?></a>
+      </div>
+    </div>
   </div>
 
 	<div role="tabpanel" class="tab-pane" id="Pushover">
@@ -679,7 +698,7 @@ elseif (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == '
 		</div>
 
 	</div>
-  
+
 </div><!-- /container -->
 <div style="margin-bottom:200px;"></div>
 <?php

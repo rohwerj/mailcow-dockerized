@@ -270,9 +270,9 @@ else
 fi
 
 # Hard-code env vars to scripts due to cron not passing them to the scripts
-sed -i "s/__DBUSER__/${DBUSER}/g" /usr/local/bin/imapsync_cron.pl /usr/local/bin/quarantine_notify.py /usr/local/bin/clean_q_aged.sh /etc/dovecot/lua/app-passdb.lua
-sed -i "s/__DBPASS__/${DBPASS}/g" /usr/local/bin/imapsync_cron.pl /usr/local/bin/quarantine_notify.py /usr/local/bin/clean_q_aged.sh /etc/dovecot/lua/app-passdb.lua
-sed -i "s/__DBNAME__/${DBNAME}/g" /usr/local/bin/imapsync_cron.pl /usr/local/bin/quarantine_notify.py /usr/local/bin/clean_q_aged.sh /etc/dovecot/lua/app-passdb.lua
+sed -i "s/__DBUSER__/${DBUSER}/g" /usr/local/bin/imapsync_cron.pl /usr/local/bin/getmail_cron.pl /usr/local/bin/quarantine_notify.py /usr/local/bin/clean_q_aged.sh /etc/dovecot/lua/app-passdb.lua
+sed -i "s/__DBPASS__/${DBPASS}/g" /usr/local/bin/imapsync_cron.pl /usr/local/bin/getmail_cron.pl /usr/local/bin/quarantine_notify.py /usr/local/bin/clean_q_aged.sh /etc/dovecot/lua/app-passdb.lua
+sed -i "s/__DBNAME__/${DBNAME}/g" /usr/local/bin/imapsync_cron.pl /usr/local/bin/getmail_cron.pl /usr/local/bin/quarantine_notify.py /usr/local/bin/clean_q_aged.sh /etc/dovecot/lua/app-passdb.lua
 sed -i "s/__MAILCOW_HOSTNAME__/${MAILCOW_HOSTNAME}/g" /usr/local/bin/quarantine_notify.py
 sed -i "s/__LOG_LINES__/${LOG_LINES}/g" /usr/local/bin/trim_logs.sh
 if [[ "${MASTER}" =~ ^([nN][oO]|[nN])+$ ]]; then
@@ -312,6 +312,7 @@ chown root:tty /dev/console
 chmod +x /usr/lib/dovecot/sieve/rspamd-pipe-ham \
   /usr/lib/dovecot/sieve/rspamd-pipe-spam \
   /usr/local/bin/imapsync_cron.pl \
+  /usr/local/bin/getmail_cron.pl \
   /usr/local/bin/postlogin.sh \
   /usr/local/bin/imapsync \
   /usr/local/bin/trim_logs.sh \
@@ -320,11 +321,13 @@ chmod +x /usr/lib/dovecot/sieve/rspamd-pipe-ham \
   /usr/local/bin/maildir_gc.sh \
   /usr/local/sbin/stop-supervisor.sh \
   /usr/local/bin/quota_notify.py \
-  /usr/local/bin/repl_health.sh
+  /usr/local/bin/repl_health.sh \
+  /usr/local/bin/rspamc.py
 
 if [[ "${MASTER}" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
 # Setup cronjobs
 echo '* * * * *    nobody  /usr/local/bin/imapsync_cron.pl 2>&1 | /usr/bin/logger' > /etc/cron.d/imapsync
+echo '* * * * *    root  /usr/local/bin/getmail_cron.pl 2>&1 | /usr/bin/logger' > /etc/cron.d/getmail
 #echo '30 3 * * *   vmail /usr/local/bin/doveadm quota recalc -A' > /etc/cron.d/dovecot-sync
 echo '* * * * *    vmail /usr/local/bin/trim_logs.sh >> /dev/console 2>&1' > /etc/cron.d/trim_logs
 echo '25 * * * *   vmail /usr/local/bin/maildir_gc.sh >> /dev/console 2>&1' > /etc/cron.d/maildir_gc

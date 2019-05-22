@@ -3,6 +3,7 @@ LABEL maintainer "Andre Peters <andre.peters@servercow.de>"
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DOVECOT=2.3.14
+ARG GETMAIL_VERSION=5.14
 ENV LC_ALL C
 
 # Add groups and users before installing Dovecot to not break compatibility
@@ -102,6 +103,12 @@ RUN groupadd -g 5000 vmail \
   && rm -rf /var/lib/apt/lists/* \
   && rm -rf /tmp/* /var/tmp/* /etc/cron.daily/* /root/.cache/
 
+RUN curl http://pyropus.ca/software/getmail/old-versions/getmail-${GETMAIL_VERSION}.tar.gz | tar xvz \
+  && cd getmail-${GETMAIL_VERSION} \
+  && python setup.py install \
+  && cd .. \
+  && rm -rf getmail-${GETMAIL_VERSION}
+
 COPY trim_logs.sh /usr/local/bin/trim_logs.sh
 COPY clean_q_aged.sh /usr/local/bin/clean_q_aged.sh
 COPY syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
@@ -109,6 +116,7 @@ COPY syslog-ng-redis_slave.conf /etc/syslog-ng/syslog-ng-redis_slave.conf
 COPY imapsync /usr/local/bin/imapsync
 COPY postlogin.sh /usr/local/bin/postlogin.sh
 COPY imapsync_cron.pl /usr/local/bin/imapsync_cron.pl
+COPY getmail_cron.pl /usr/local/bin/getmail_cron.pl
 COPY report-spam.sieve /usr/lib/dovecot/sieve/report-spam.sieve
 COPY report-ham.sieve /usr/lib/dovecot/sieve/report-ham.sieve
 COPY rspamd-pipe-ham /usr/lib/dovecot/sieve/rspamd-pipe-ham
@@ -121,6 +129,7 @@ COPY stop-supervisor.sh /usr/local/sbin/stop-supervisor.sh
 COPY quarantine_notify.py /usr/local/bin/quarantine_notify.py
 COPY quota_notify.py /usr/local/bin/quota_notify.py
 COPY repl_health.sh /usr/local/bin/repl_health.sh
+COPY rspamc.py /usr/local/bin/rspamc.py
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
