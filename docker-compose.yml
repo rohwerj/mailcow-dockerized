@@ -415,6 +415,7 @@ services:
         - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
       volumes:
         - ./data/web:/web:ro,z
+        - ./data/webdav:/webdav:ro
         - ./data/conf/rspamd/dynmaps:/dynmaps:ro,z
         - ./data/assets/ssl/:/etc/ssl/mail/:ro,z
         - ./data/conf/nginx/:/etc/nginx/conf.d/:z
@@ -606,6 +607,28 @@ services:
           aliases:
             - olefy
 
+    php-fpm-webdav:
+      image: rohwerj/phpfpm-webdav:1.0
+      command: "php-fpm -d date.timezone=${TZ} -d expose_php=0"
+      volumes:
+        - ./data/webdav:/webdav:rw
+        - webdav-vol-1:/sabredav/public:rw
+        - ./data/conf/phpfpm/php-fpm.d/pools.conf:/usr/local/etc/php-fpm.d/z-pools.conf
+        - ./data/conf/phpfpm/php-conf.d/opcache-recommended.ini:/usr/local/etc/php/conf.d/opcache-recommended.ini
+        - ./data/conf/phpfpm/php-conf.d/upload.ini:/usr/local/etc/php/conf.d/upload.ini
+        - ./data/conf/phpfpm/php-conf.d/other.ini:/usr/local/etc/php/conf.d/zzz-other.ini
+      environment:
+        - LOG_LINES=${LOG_LINES:-9999}
+        - TZ=${TZ}
+        - MAILCOW_HOSTNAME=${MAILCOW_HOSTNAME}
+      restart: always
+      dns:
+        - ${IPV4_NETWORK:-172.22.1}.254
+      networks:
+        mailcow-network:
+          aliases:
+            - phpfpm-webdav
+
     ofelia-mailcow:
       image: mcuadros/ofelia:latest
       restart: always
@@ -635,6 +658,7 @@ services:
         - clamd-mailcow
         - rspamd-mailcow
         - php-fpm-mailcow
+        - php-fpm-webdav
         - sogo-mailcow
         - dovecot-mailcow
         - postfix-mailcow
@@ -680,3 +704,4 @@ volumes:
   sogo-web-vol-1:
   sogo-userdata-backup-vol-1:
   clamd-db-vol-1:
+  webdav-vol-1:
