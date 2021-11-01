@@ -143,7 +143,7 @@ while ($row = $sth->fetchrow_arrayref()) {
     $update = $dbh->prepare("UPDATE getmail SET returned_text = ?, success = ? WHERE id = ?");
     $update->bind_param( 1, ${stdout} );
     $update->bind_param( 2, ${success} );
-    $update->bind_param( 4, ${id} );
+    $update->bind_param( 3, ${id} );
     $update->execute();
   } catch {
     $update = $dbh->prepare("UPDATE getmail SET returned_text = 'Could not start or finish getmail', success = 0 WHERE id = ?");
