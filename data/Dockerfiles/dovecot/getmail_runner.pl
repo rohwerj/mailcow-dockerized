@@ -131,14 +131,22 @@ while ($row = $sth->fetchrow_arrayref()) {
     $is_running->bind_param( 1, ${id} );
     $is_running->execute();
 
-    run [@$generated_cmds], '&>', \my $stdout;
+    my $exit_code;
+    run [@$generated_cmds], '&>', \my $stdout and $exit_code = $?;
+    print "exit = $exit_code\n";
 
-    $update = $dbh->prepare("UPDATE getmail SET returned_text = ? WHERE id = ?");
+    $success = 0;
+    if (defined $exit_code && $exit_code == 0) {
+      $success = 1;
+    }
+
+    $update = $dbh->prepare("UPDATE getmail SET returned_text = ?, success = ? WHERE id = ?");
     $update->bind_param( 1, ${stdout} );
-    $update->bind_param( 2, ${id} );
+    $update->bind_param( 2, ${success} );
+    $update->bind_param( 4, ${id} );
     $update->execute();
   } catch {
-    $update = $dbh->prepare("UPDATE getmail SET returned_text = 'Could not start or finish getmail' WHERE id = ?");
+    $update = $dbh->prepare("UPDATE getmail SET returned_text = 'Could not start or finish getmail', success = 0 WHERE id = ?");
     $update->bind_param( 1, ${id} );
     $update->execute();
   } finally {

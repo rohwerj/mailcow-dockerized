@@ -308,7 +308,7 @@ $(document).ready(function() {
           if (unset === true) {
             unset = null;
             // Keep form data for sync jobs
-            if (id != "add_syncjob") {
+            if (id != "add_syncjob" && id != 'add_retrievaljob') {
               $('form').formcache('clear');
               $('form').formcache('destroy');
               var i = localStorage.length;
