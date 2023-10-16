@@ -223,7 +223,7 @@ services:
             - sogo
 
     dovecot-mailcow:
-      image: mailcow/dovecot:2.1
+      image: rohwerj/dovecot:2.1
       depends_on:
         - mysql-mailcow
         - netfilter-mailcow
@@ -555,7 +555,7 @@ services:
           aliases:
             - dockerapi
 
-    
+
     ##### Will be removed soon #####
     solr-mailcow:
       image: mailcow/solr:1.8.3
