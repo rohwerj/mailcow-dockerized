@@ -1,18 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import email
-import httplib
+import http.client
 import json
 import socket
 import subprocess
 import sys
 
-class UnixHTTPConnection(httplib.HTTPConnection):
+class UnixHTTPConnection(http.client.HTTPConnection):
 
-    def __init__(self, path, host='localhost', port=None, strict=None,
-                 timeout=None):
-        httplib.HTTPConnection.__init__(self, host, port=port, strict=strict,
-                                        timeout=timeout)
+    def __init__(self, path, host='localhost', port=None, timeout=None):
+        http.client.HTTPConnection.__init__(self, host, port=port, timeout=timeout)
         self.path = path
 
     def connect(self):
@@ -61,7 +59,7 @@ output = msg.as_string()
 
 arguments = ["/usr/lib/dovecot/deliver", "-e", "-d", destination]
 
-process = subprocess.Popen(arguments, stdin=subprocess.PIPE)
+process = subprocess.Popen(arguments, stdin=subprocess.PIPE, text=True)
 process.communicate(output)
 process.wait()
 if process.returncode != 0:
