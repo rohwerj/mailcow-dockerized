@@ -2264,6 +2264,7 @@ jQuery(function($){
         {"name":"protocol","title":lang.protocol,"breakpoints":"all"},
         {"name":"mins_interval","title":lang.mins_interval,"breakpoints":"all"},
         {"name":"last_run","title":lang.last_run,"breakpoints":"xs sm md"},
+        {"name":"exit_status","filterable": false,"title":lang.retrievaljob_last_run_result},
         {"name":"log","title":"Log"},
         {"name":"active","filterable": false,"style":{"maxWidth":"70px","width":"70px"},"title":lang.active},
         {"name":"is_running","filterable": false,"style":{"maxWidth":"120px","width":"100px"},"title":lang.status},
@@ -2294,6 +2295,16 @@ jQuery(function($){
             }
             if (!item.last_run > 0) {
               item.last_run = lang.waiting;
+            }
+            if (item.success == null) {
+              item.exit_status = '-';
+            } else {
+              item.exit_status = '<i class="text-' + (item.success == 1 ? 'success' : 'danger') + ' bi bi-' + (item.success == 1 ? 'check-lg' : 'x-lg') + '"></i>';
+              if (item.success == 1) {
+                item.exit_status = item.exit_status + ' ' + lang.retrievaljob_EX_OK;
+              } else {
+                item.exit_status = item.exit_status + ' ' + lang.retrievaljob_check_log;
+              }
             }
           });
         }
