@@ -6,7 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG DOVECOT=2.3.21
 # renovate: datasource=github-releases depName=tianon/gosu versioning=semver-coerced extractVersion=^v(?<version>.*)$
 ARG GOSU_VERSION=1.16
-ARG GETMAIL_VERSION=5.15
+ARG GETMAIL_VERSION=6.15
 ENV LC_ALL C
 
 
@@ -116,11 +116,11 @@ RUN groupadd -g 5000 vmail \
 # imapsync dependencies
 RUN cpan Crypt::OpenSSL::PKCS12
 
-RUN curl https://pyropus.ca/software/getmail/old-versions/getmail-${GETMAIL_VERSION}.tar.gz | tar xvz \
-  && cd getmail-${GETMAIL_VERSION} \
-  && python setup.py install \
+RUN curl -L https://github.com/getmail6/getmail6/archive/refs/tags/v${GETMAIL_VERSION}.tar.gz | tar xvz \
+  && cd getmail6-${GETMAIL_VERSION} \
+  && python3 setup.py install \
   && cd .. \
-  && rm -rf getmail-${GETMAIL_VERSION}
+  && rm -rf getmail6-${GETMAIL_VERSION}
 
 COPY trim_logs.sh /usr/local/bin/trim_logs.sh
 COPY clean_q_aged.sh /usr/local/bin/clean_q_aged.sh
