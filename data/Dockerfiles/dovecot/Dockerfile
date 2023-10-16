@@ -112,7 +112,7 @@ RUN addgroup -g 5000 vmail \
 
 # RUN cpan LockFile::Simple
 
-RUN curl http://pyropus.ca/software/getmail/old-versions/getmail-${GETMAIL_VERSION}.tar.gz | tar xvz \
+RUN curl https://pyropus.ca/software/getmail/old-versions/getmail-${GETMAIL_VERSION}.tar.gz | tar xvz \
   && cd getmail-${GETMAIL_VERSION} \
   && python setup.py install \
   && cd .. \
