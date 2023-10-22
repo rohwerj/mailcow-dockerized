@@ -372,6 +372,9 @@ $(document).ready(function() {
     if (template.acl_syncjobs == 1){
       acl.push("syncjobs");
     }
+    if (template.acl_retrievaljobs == 1){
+      acl.push("retrievaljobs");
+    }
     if (template.acl_eas_reset == 1){
       acl.push("eas_reset");
     }
@@ -2254,91 +2257,151 @@ jQuery(function($){
   }
 
   function draw_retrieval_job_table() {
-    ft_retrievaljob_table = FooTable.init('#retrieval_job_table', {
-      "columns": [
-        {"name":"chkbox","title":"","style":{"maxWidth":"60px","width":"60px","text-align":"center"},"filterable": false,"sortable": false,"type":"html"},
-        {"sorted": true,"name":"id","title":"ID","style":{"maxWidth":"60px","width":"60px","text-align":"center"}},
-        {"name":"local_dest","title":lang.owner},
-        {"name":"user","title":lang.username},
-        {"name":"server_w_port","title":"Server","breakpoints":"xs"},
-        {"name":"protocol","title":lang.protocol,"breakpoints":"all"},
-        {"name":"mins_interval","title":lang.mins_interval,"breakpoints":"all"},
-        {"name":"last_run","title":lang.last_run,"breakpoints":"xs sm md"},
-        {"name":"exit_status","filterable": false,"title":lang.retrievaljob_last_run_result},
-        {"name":"log","title":"Log"},
-        {"name":"active","filterable": false,"style":{"maxWidth":"70px","width":"70px"},"title":lang.active},
-        {"name":"is_running","filterable": false,"style":{"maxWidth":"120px","width":"100px"},"title":lang.status},
-        {"name":"action","filterable": false,"sortable": false,"style":{"text-align":"right","maxWidth":"180px","width":"180px"},"type":"html","title":lang.action,"breakpoints":"xs sm"}
-      ],
-      "empty": lang.empty,
-      "rows": $.ajax({
-        dataType: 'json',
-        url: '/api/v1/get/retrievaljobs/all/no_log',
-        jsonp: false,
-        error: function () {
-          console.log('Cannot draw retrieval job table');
-        },
-        success: function (data) {
-          $.each(data, function (i, item) {
-            item.log = '<a href="#retrievaljobLogModal" data-toggle="modal" data-retrievaljob-id="' + encodeURIComponent(item.id) + '">Open logs</a>'
+    // just recalc width if instance already exists
+    if ($.fn.DataTable.isDataTable('#retrieval_job_table') ) {
+      $('#retrieval_job_table').DataTable().columns.adjust().responsive.recalc();
+      return;
+    }
+
+    var table = $('#retrieval_job_table').DataTable({
+      responsive: true,
+      processing: true,
+      serverSide: false,
+      stateSave: true,
+      pageLength: pagination_size,
+      dom: "<'row'<'col-sm-12 col-md-6'f><'col-sm-12 col-md-6'l>>" +
+        "tr" +
+        "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+      language: lang_datatables,
+      order: [[2, 'desc']],
+      initComplete: function(){
+        hideTableExpandCollapseBtn('#tab-retrievaljobs', '#retrieval_job_table');
+      },
+      ajax: {
+        type: "GET",
+        url: "/api/v1/get/retrievaljobs/all/no_log",
+        dataSrc: function(json){
+          $.each(json, function (i, item) {
+            item.log = '<a href="#retrievaljobLogModal" data-bs-toggle="modal" data-retrievaljob-id="' + encodeURIComponent(item.id) + '">' + lang.open_logs + '</a>'
             item.user = escapeHtml(item.user);
-            item.server_w_port = escapeHtml(item.host + ':' + item.port);
+            item.server_w_port = escapeHtml(item.host) + ':' + escapeHtml(item.port);
             item.action = '<div class="btn-group">' +
-              '<a href="/edit/retrievaljob/' + item.id + '" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-pencil"></span> ' + lang.edit + '</a>' +
-              '<a href="#" data-action="delete_selected" data-id="single-retrievaljob" data-api-url="delete/retrievaljob" data-item="' + item.id + '" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-trash"></span> ' + lang.remove + '</a>' +
+              '<a href="/edit/retrievaljob/' + item.id + '" class="btn btn-sm btn-xs-lg btn-xs-half btn-secondary"><i class="bi bi-pencil-fill"></i> ' + lang.edit + '</a>' +
+              '<a href="#" data-action="delete_selected" data-id="single-retrievaljob" data-api-url="delete/retrievaljob" data-item="' + item.id + '" class="btn btn-sm btn-xs-lg btn-xs-half btn-danger"><i class="bi bi-trash"></i> ' + lang.remove + '</a>' +
               '</div>';
-            item.chkbox = '<input type="checkbox" data-id="retrievaljob" name="multi_select" value="' + item.id + '" />';
+            item.chkbox = '<input type="checkbox" class="form-check-input" data-id="retrievaljob" name="multi_select" value="' + item.id + '" />';
             if (item.is_running == 1) {
-              item.is_running = '<span id="active-script" class="label label-success">' + lang.running + '</span>';
+              item.is_running = '<span id="active-script" class="badge fs-6 bg-success">' + lang.running + '</span>';
             } else {
-              item.is_running = '<span id="inactive-script" class="label label-warning">' + lang.waiting + '</span>';
+              item.is_running = '<span id="inactive-script" class="badge fs-6 bg-warning">' + lang.waiting + '</span>';
             }
             if (!item.last_run > 0) {
               item.last_run = lang.waiting;
             }
             if (item.success == null) {
-              item.exit_status = '-';
+              item.success = '-';
+              item.exit_status = '';
             } else {
-              item.exit_status = '<i class="text-' + (item.success == 1 ? 'success' : 'danger') + ' bi bi-' + (item.success == 1 ? 'check-lg' : 'x-lg') + '"></i>';
-              if (item.success == 1) {
-                item.exit_status = item.exit_status + ' ' + lang.retrievaljob_EX_OK;
-              } else {
-                item.exit_status = item.exit_status + ' ' + lang.retrievaljob_check_log;
-              }
+              item.success = '<i class="text-' + (item.success == 1 ? 'success' : 'danger') + ' bi bi-' + (item.success == 1 ? 'check-lg' : 'x-lg') + '"></i>';
             }
+            if (lang['retrievaljob_'+item.exit_status]) {
+              item.exit_status = lang['retrievaljob_'+item.exit_status];
+            } else if (item.success != '-') {
+              item.exit_status = lang.retrievaljob_check_log;
+            }
+            item.exit_status = item.success + ' ' + item.exit_status;
           });
-        }
-      }),
-      "paging": {
-        "enabled": true,
-        "limit": 5,
-        "size": pagination_size
-      },
-      "state": {
-        "enabled": true
-      },
-      "filtering": {
-        "enabled": true,
-        "delay": 1200,
-        "position": "left",
-        "connectors": false,
-        "placeholder": lang.filter_table
-      },
-      "sorting": {
-        "enabled": true
-      },
-      "on": {
-        "destroy.ft.table": function(e, ft){
-          $('.refresh_table').attr('disabled', 'true');
-        },
-        "ready.ft.table": function(e, ft){
-          table_mailbox_ready(ft, 'retrieval_job_table');
-        },
-        "after.ft.filtering": function(e, ft){
-          table_mailbox_ready(ft, 'retrieval_job_table');
+
+          return json;
         }
       },
-      "toggleSelector": "table tbody span.footable-toggle"
+      columns: [
+        {
+          // placeholder, so checkbox will not block child row toggle
+          title: '',
+          data: null,
+          searchable: false,
+          orderable: false,
+          defaultContent: '',
+          responsivePriority: 1
+        },
+        {
+          title: '',
+          data: 'chkbox',
+          searchable: false,
+          orderable: false,
+          defaultContent: '',
+          responsivePriority: 2
+        },
+        {
+          title: 'ID',
+          data: 'id',
+          responsivePriority: 3,
+          defaultContent: ''
+        },
+        {
+          title: lang.owner,
+          data: 'local_dest',
+          responsivePriority: 4,
+          defaultContent: ''
+        },
+        {
+          title: lang.username,
+          data: 'user',
+          responsivePriority: 4,
+          defaultContent: ''
+        },
+        {
+          title: 'Server',
+          data: 'server_w_port',
+          defaultContent: ''
+        },
+        {
+          title: lang.last_run,
+          data: 'last_run',
+          defaultContent: ''
+        },
+        {
+          title: lang.retrievaljob_last_run_result,
+          data: 'exit_status',
+          defaultContent: ''
+        },
+        {
+          title: 'Log',
+          data: 'log',
+          defaultContent: ''
+        },
+        {
+          title: lang.active,
+          data: 'active',
+          defaultContent: '',
+          render: function (data, type) {
+            return 1==data?'<i class="bi bi-check-lg"><span class="sorting-value">1</span></i>':0==data&&'<i class="bi bi-x-lg"><span class="sorting-value">0</span></i>';
+          }
+        },
+        {
+          title: lang.status,
+          data: 'is_running',
+          defaultContent: ''
+        },
+        {
+          title: lang.mins_interval,
+          data: 'mins_interval',
+          defaultContent: '',
+          className: 'none'
+        },
+        {
+          title: lang.action,
+          data: 'action',
+          className: 'dt-sm-head-hidden dt-data-w100 dtr-col-md dt-text-right',
+          responsivePriority: 5,
+          defaultContent: ''
+        },
+      ]
+    });
+
+    table.on('responsive-resize', function (e, datatable, columns){
+      hideTableExpandCollapseBtn('#tab-retrievaljobs', '#retrieval_job_table');
     });
   }
 
@@ -2523,7 +2586,7 @@ jQuery(function($){
   onVisible("[id^=alias_table]", () => draw_alias_table());
   onVisible("[id^=aliasdomain_table]", () => draw_aliasdomain_table());
   onVisible("[id^=sync_job_table]", () => draw_sync_job_table());
-  onVisible("[id^=tab-retrievaljobs]", () => draw_retrieval_job_table());
+  onVisible("[id^=retrieval_job_table]", () => draw_retrieval_job_table());
   onVisible("[id^=filter_table]", () => draw_filter_table());
   onVisible("[id^=bcc_table]", () => draw_bcc_table());
   onVisible("[id^=recipient_map_table]", () => draw_recipient_map_table());
