@@ -3,37 +3,37 @@
 {% block inner_content %}
 {% if result %}
 
-  <h4>{{ lang.edit.retrievaljob }}</h4>
+  <h4 class="mb-4">{{ lang.edit.retrievaljob }}</h4>
   <form class="form-horizontal" data-id="editretrievaljob" role="form" method="post">
     <input type="hidden" value="0" name="delete_mail">
     <input type="hidden" value="0" name="use_ssl">
     <input type="hidden" value="0" name="read_all">
     <input type="hidden" value="0" name="active">
-    <div class="form-group">
+    <div class="row mb-2">
       <label class="control-label col-sm-2" for="host">{{ lang.edit.hostname }}</label>
       <div class="col-sm-10">
       <input type="text" class="form-control" name="host" id="host" value="{{ result.host }}">
       </div>
     </div>
-    <div class="form-group">
+    <div class="row mb-4">
       <label class="control-label col-sm-2" for="port">Port</label>
       <div class="col-sm-10">
         <input type="number" class="form-control" name="port" id="port" min="1" max="65535" value="{{ result.port }}">
       </div>
     </div>
-    <div class="form-group">
+    <div class="row mb-2">
       <label class="control-label col-sm-2" for="user">{{ lang.edit.username }}</label>
       <div class="col-sm-10">
       <input type="text" class="form-control" name="user" id="user" value="{{ result.user }}">
       </div>
     </div>
-    <div class="form-group">
+    <div class="row mb-4">
       <label class="control-label col-sm-2" for="password">{{ lang.edit.password }}</label>
       <div class="col-sm-10">
       <input type="password" class="form-control" name="password" id="password" value="{{ result.password }}">
       </div>
     </div>
-    <div class="form-group">
+    <div class="row mb-2">
       <label class="control-label col-sm-2" for="protocol">{{ lang.edit.protocol }}</label>
       <div class="col-sm-10">
         <select id="protocol" name="protocol">
@@ -42,44 +42,44 @@
         </select>
       </div>
     </div>
-    <div class="form-group">
+    <div class="row mb-2">
       <label class="control-label col-sm-2" for="mins_interval">{{ lang.edit.mins_interval }}</label>
       <div class="col-sm-10">
         <input type="number" class="form-control" name="mins_interval" min="1" max="3600" value="{{ result.mins_interval }}" required>
-        <small class="help-block">10-3600</small>
+        <small class="text-muted">10-3600</small>
       </div>
     </div>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <div class="checkbox">
-          <label><input type="checkbox" value="1" name="delete_mail"{% if result.delete_mail == '1' %} checked{% endif %}> {{ lang.edit.delete1 }}</label>
+    <div class="row mb-2">
+      <div class="offset-sm-2 col-sm-10">
+        <div class="form-">
+          <label><input type="checkbox" class="form-check-input" value="1" name="delete_mail"{% if result.delete_mail == '1' %} checked{% endif %}> {{ lang.edit.delete1 }}</label>
         </div>
       </div>
     </div>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <div class="checkbox">
-          <label><input type="checkbox" value="1" name="read_all"{% if result.read_all == '1' %} checked{% endif %}> {{ lang.edit.read_all }}</label>
+    <div class="row mb-2">
+      <div class="offset-sm-2 col-sm-10">
+        <div class="form-check">
+          <label><input type="checkbox" class="form-check-input" value="1" name="read_all"{% if result.read_all == '1' %} checked{% endif %}> {{ lang.edit.read_all }}</label>
         </div>
       </div>
     </div>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <div class="checkbox">
-          <label><input type="checkbox" value="1" name="use_ssl"{% if result.use_ssl == '1' %} checked{% endif %}> {{ lang.edit.use_ssl }}</label>
+    <div class="row mb-2">
+      <div class="offset-sm-2 col-sm-10">
+        <div class="form-check">
+          <label><input type="checkbox" class="form-check-input" value="1" name="use_ssl"{% if result.use_ssl == '1' %} checked{% endif %}> {{ lang.edit.use_ssl }}</label>
         </div>
       </div>
     </div>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <div class="checkbox">
-        <label><input type="checkbox" value="1" name="active"{% if result.active_int == '1' %} checked{% endif %}> {{ lang.edit.active }}</label>
+    <div class="row mb-2">
+      <div class="offset-sm-2 col-sm-10">
+        <div class="form-check">
+        <label><input type="checkbox" class="form-check-input" value="1" name="active"{% if result.active_int == '1' %} checked{% endif %}> {{ lang.edit.active }}</label>
         </div>
       </div>
     </div>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <button class="btn btn-xs-lg visible-xs-block visible-sm-inline visible-md-inline visible-lg-inline btn-success" data-action="edit_selected" data-id="editretrievaljob" data-item="{{ result.id }}" data-api-url='edit/retrievaljob' data-api-attr='{}' href="#">{{ lang.edit.save }}</button>
+    <div class="row mb-2">
+      <div class="offset-sm-2 col-sm-10">
+        <button class="btn btn-xs-lg d-block d-sm-inline btn-success" data-action="edit_selected" data-id="editretrievaljob" data-item="{{ result.id }}" data-api-url='edit/retrievaljob' data-api-attr='{}' href="#">{{ lang.edit.save }}</button>
       </div>
     </div>
   </form>
