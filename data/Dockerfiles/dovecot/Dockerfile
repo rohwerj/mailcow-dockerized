@@ -6,7 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG DOVECOT=2.3.21
 # renovate: datasource=github-releases depName=tianon/gosu versioning=semver-coerced extractVersion=^v(?<version>.*)$
 ARG GOSU_VERSION=1.16
-ARG GETMAIL_VERSION=6.15
+ARG GETMAIL_VERSION=6.18.13
 ENV LC_ALL C
 
 
