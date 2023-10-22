@@ -637,7 +637,7 @@ services:
             - olefy
 
     php-fpm-webdav:
-      image: rohwerj/phpfpm-webdav:1.0
+      image: rohwerj/phpfpm-webdav:1.1
       command: "php-fpm -d date.timezone=${TZ} -d expose_php=0"
       volumes:
         - ./data/webdav:/webdav:rw
