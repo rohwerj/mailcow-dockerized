@@ -3,7 +3,7 @@ LABEL maintainer "The Infrastructure Company GmbH <info@servercow.de>"
 
 # renovate: datasource=github-releases depName=tianon/gosu versioning=semver-coerced extractVersion=^(?<version>.*)$
 ARG GOSU_VERSION=1.16
-ARG GETMAIL_VERSION=6.15
+ARG GETMAIL_VERSION=6.18.14
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
