@@ -218,7 +218,7 @@ services:
             - sogo
 
     dovecot-mailcow:
-      image: rohwerj/dovecot:1.25
+      image: rohwerj/dovecot:1.25.1
       depends_on:
         - mysql-mailcow
       dns:
