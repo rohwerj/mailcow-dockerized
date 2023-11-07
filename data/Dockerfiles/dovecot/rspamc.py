@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import email
+from email import policy
 import http.client
 import json
 import socket
@@ -21,8 +22,7 @@ class UnixHTTPConnection(http.client.HTTPConnection):
 destination = sys.argv[1]
 hostname = sys.argv[2]
 
-emailText = sys.stdin.read()
-msg = email.message_from_string(emailText)
+msg = email.message_from_string(s=sys.stdin.read(), policy=policy.default)
 
 headers = {
   "Pass": "all",
@@ -30,7 +30,7 @@ headers = {
 }
 
 connection = UnixHTTPConnection("/var/lib/rspamd/rspamd.sock")
-connection.request("POST", "/checkv2", emailText.encode(errors='replace'), headers)
+connection.request("POST", "/checkv2", msg.__str__(), headers)
 response = connection.getresponse()
 if response.status != 200:
     sys.exit("Status from rspamd is " + str(response.status) + ": " + response.reason)
@@ -55,7 +55,7 @@ msg["X-Spam"] = spam
 msg["X-Spam-Score"] = str(score)
 msg["X-Spam-Action"] = action
 
-output = msg.as_string()
+output = msg.__str__()
 
 arguments = ["/usr/lib/dovecot/deliver", "-e", "-d", destination]
 
