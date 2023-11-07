@@ -30,7 +30,7 @@ headers = {
 }
 
 connection = UnixHTTPConnection("/var/lib/rspamd/rspamd.sock")
-connection.request("POST", "/checkv2", emailText.encode(), headers)
+connection.request("POST", "/checkv2", emailText.encode(errors='replace'), headers)
 response = connection.getresponse()
 if response.status != 200:
     sys.exit("Status from rspamd is " + str(response.status) + ": " + response.reason)
