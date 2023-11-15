@@ -22,7 +22,20 @@ class UnixHTTPConnection(http.client.HTTPConnection):
 destination = sys.argv[1]
 hostname = sys.argv[2]
 
-msg = email.message_from_string(s=sys.stdin.read(), policy=policy.default)
+arguments = ["/usr/lib/dovecot/deliver", "-e", "-d", destination]
+
+msgBytes = sys.stdin.buffer.read()
+msg = email.message_from_bytes(s=msgBytes, policy=policy.default)
+
+try:
+    bytes(msg)
+except UnicodeEncodeError as e:
+    print('Encoding error happened for email message {0}'.format(str(e)))
+    process = subprocess.run(arguments, input=msgBytes)
+    if process.returncode != 0:
+        exit("Deliver failed with return code " + str(process.returncode))
+    else:
+        exit(0)
 
 headers = {
   "Pass": "all",
@@ -30,7 +43,7 @@ headers = {
 }
 
 connection = UnixHTTPConnection("/var/lib/rspamd/rspamd.sock")
-connection.request("POST", "/checkv2", msg.__str__(), headers)
+connection.request("POST", "/checkv2", bytes(msg), headers)
 response = connection.getresponse()
 if response.status != 200:
     sys.exit("Status from rspamd is " + str(response.status) + ": " + response.reason)
@@ -55,12 +68,6 @@ msg["X-Spam"] = spam
 msg["X-Spam-Score"] = str(score)
 msg["X-Spam-Action"] = action
 
-output = msg.__str__()
-
-arguments = ["/usr/lib/dovecot/deliver", "-e", "-d", destination]
-
-process = subprocess.Popen(arguments, stdin=subprocess.PIPE, text=True)
-process.communicate(output)
-process.wait()
+process = subprocess.run(arguments, input=bytes(msg))
 if process.returncode != 0:
     exit("Deliver failed with return code " + str(process.returncode))
