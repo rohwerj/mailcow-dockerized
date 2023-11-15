@@ -222,7 +222,7 @@ services:
             - sogo
 
     dovecot-mailcow:
-      image: rohwerj/dovecot:1.28.3
+      image: rohwerj/dovecot:1.28.4
       depends_on:
         - mysql-mailcow
         - netfilter-mailcow
