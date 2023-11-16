@@ -38,8 +38,7 @@ except UnicodeEncodeError as e:
         exit(0)
 
 headers = {
-  "Pass": "all",
-  "Hostname": hostname
+  "Pass": "all"
 }
 
 connection = UnixHTTPConnection("/var/lib/rspamd/rspamd.sock")
