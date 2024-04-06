@@ -122,7 +122,7 @@ while ($row = $sth->fetchrow_arrayref()) {
   print $getmail_rc_file "delete = $delete_bool\n";
   print $getmail_rc_file "delivered_to = false\n";
 
-  my $generated_cmds = [ "/usr/local/bin/getmail",
+  my $generated_cmds = [ "/usr/bin/getmail",
   "--getmaildir=$run_dir",
   "--rcfile=$getmail_rc_file"];
 
@@ -146,7 +146,7 @@ while ($row = $sth->fetchrow_arrayref()) {
     $update->bind_param( 3, ${id} );
     $update->execute();
   } catch {
-    $update = $dbh->prepare("UPDATE getmail SET returned_text = 'Could not start or finish getmail', success = 0 WHERE id = ?");
+    $update = $dbh->prepare("UPDATE getmail SET returned_text = 'Could not start or finish getmail: $_', success = 0 WHERE id = ?");
     $update->bind_param( 1, ${id} );
     $update->execute();
   } finally {
