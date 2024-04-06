@@ -22,7 +22,7 @@ class UnixHTTPConnection(http.client.HTTPConnection):
 destination = sys.argv[1]
 hostname = sys.argv[2]
 
-arguments = ["/usr/lib/dovecot/deliver", "-e", "-d", destination]
+arguments = ["/usr/libexec/dovecot/deliver", "-e", "-d", destination]
 
 msgBytes = sys.stdin.buffer.read()
 msg = email.message_from_bytes(s=msgBytes, policy=policy.default)
