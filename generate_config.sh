@@ -26,35 +26,35 @@ for bin in openssl curl docker git awk sha1sum grep cut; do
 done
 
 if docker compose > /dev/null 2>&1; then
-    if docker compose version --short | grep "^2." > /dev/null 2>&1; then
+    if docker compose version --short | grep -e "^2." -e "^v2." > /dev/null 2>&1; then
       COMPOSE_VERSION=native
-      echo -e "\e[31mFound Docker Compose Plugin (native).\e[0m"
-      echo -e "\e[31mSetting the DOCKER_COMPOSE_VERSION Variable to native\e[0m"
+      echo -e "\e[33mFound Docker Compose Plugin (native).\e[0m"
+      echo -e "\e[33mSetting the DOCKER_COMPOSE_VERSION Variable to native\e[0m"
       sleep 2
       echo -e "\e[33mNotice: You´ll have to update this Compose Version via your Package Manager manually!\e[0m"
     else
       echo -e "\e[31mCannot find Docker Compose with a Version Higher than 2.X.X.\e[0m" 
-      echo -e "\e[31mPlease update/install it manually regarding to this doc site: https://docs.mailcow.email/i_u_m/i_u_m_install/\e[0m"
+      echo -e "\e[31mPlease update/install it manually regarding to this doc site: https://docs.mailcow.email/install/\e[0m"
       exit 1
     fi
 elif docker-compose > /dev/null 2>&1; then
   if ! [[ $(alias docker-compose 2> /dev/null) ]] ; then
     if docker-compose version --short | grep "^2." > /dev/null 2>&1; then
       COMPOSE_VERSION=standalone
-      echo -e "\e[31mFound Docker Compose Standalone.\e[0m"
-      echo -e "\e[31mSetting the DOCKER_COMPOSE_VERSION Variable to standalone\e[0m"
+      echo -e "\e[33mFound Docker Compose Standalone.\e[0m"
+      echo -e "\e[33mSetting the DOCKER_COMPOSE_VERSION Variable to standalone\e[0m"
       sleep 2
       echo -e "\e[33mNotice: For an automatic update of docker-compose please use the update_compose.sh scripts located at the helper-scripts folder.\e[0m"
     else
       echo -e "\e[31mCannot find Docker Compose with a Version Higher than 2.X.X.\e[0m" 
-      echo -e "\e[31mPlease update/install manually regarding to this doc site: https://docs.mailcow.email/i_u_m/i_u_m_install/\e[0m"
+      echo -e "\e[31mPlease update/install manually regarding to this doc site: https://docs.mailcow.email/install/\e[0m"
       exit 1
     fi
   fi
 
 else
   echo -e "\e[31mCannot find Docker Compose.\e[0m" 
-  echo -e "\e[31mPlease install it regarding to this doc site: https://docs.mailcow.email/i_u_m/i_u_m_install/\e[0m"
+  echo -e "\e[31mPlease install it regarding to this doc site: https://docs.mailcow.email/install/\e[0m"
   exit 1
 fi
 
@@ -363,6 +363,10 @@ SKIP_IP_CHECK=n
 
 SKIP_HTTP_VERIFICATION=n
 
+# Skip Unbound (DNS Resolver) Healthchecks (NOT Recommended!) - y/n
+
+SKIP_UNBOUND_HEALTHCHECK=n
+
 # Skip ClamAV (clamd-mailcow) anti-virus (Rspamd will auto-detect a missing ClamAV container) - y/n
 
 SKIP_CLAMD=${SKIP_CLAMD}
@@ -398,8 +402,18 @@ USE_WATCHDOG=y
 #WATCHDOG_NOTIFY_EMAIL=a@example.com,b@example.com,c@example.com
 #WATCHDOG_NOTIFY_EMAIL=
 
+# Send notifications to a webhook URL that receives a POST request with the content type "application/json".
+# You can use this to send notifications to services like Discord, Slack and others.
+#WATCHDOG_NOTIFY_WEBHOOK=https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# JSON body included in the webhook POST request. Needs to be in single quotes.
+# Following variables are available: SUBJECT, BODY
+#WATCHDOG_NOTIFY_WEBHOOK_BODY='{"username": "mailcow Watchdog", "content": "**${SUBJECT}**\n${BODY}"}'
+
 # Notify about banned IP (includes whois lookup)
 WATCHDOG_NOTIFY_BAN=n
+
+# Send a notification when the watchdog is started.
+WATCHDOG_NOTIFY_START=y
 
 # Subject for watchdog mails. Defaults to "Watchdog ALERT" followed by the error message.
 #WATCHDOG_SUBJECT=
@@ -480,6 +494,9 @@ WEBAUTHN_ONLY_TRUSTED_VENDORS=n
 # Otherwise it will work normally.
 SPAMHAUS_DQS_KEY=
 
+# Prevent netfilter from setting an iptables/nftables rule to isolate the mailcow docker network - y/n
+# CAUTION: Disabling this may expose container ports to other neighbors on the same subnet, even if the ports are bound to localhost
+DISABLE_NETFILTER_ISOLATION_RULE=n
 EOF
 
 mkdir -p data/assets/ssl
