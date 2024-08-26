@@ -470,6 +470,106 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             'msg' => array('mailbox_modified', $username)
           );
         break;
+        case 'retrievaljob':
+          if (!isset($_SESSION['acl']['retrievaljobs']) || $_SESSION['acl']['retrievaljobs'] != "1" ) {
+            $_SESSION['return'][] = array(
+              'type' => 'danger',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => 'access_denied'
+            );
+            return false;
+          }
+          if (isset($_data['username']) && filter_var($_data['username'], FILTER_VALIDATE_EMAIL)) {
+            if (!hasMailboxObjectAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $_data['username'])) {
+              $_SESSION['return'][] = array(
+                'type' => 'danger',
+                'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+                'msg' => 'access_denied'
+              );
+              return false;
+            }
+            else {
+              $username = $_data['username'];
+            }
+          }
+          elseif ($_SESSION['mailcow_cc_role'] == "user") {
+            $username = $_SESSION['mailcow_cc_username'];
+          }
+          else {
+            $_SESSION['return'][] = array(
+              'type' => 'danger',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => 'no_user_defined'
+            );
+            return false;
+          }
+          $active               = intval($_data['active']);
+          $delete               = intval($_data['delete']);
+          $read_all             = intval($_data['read_all']);
+          $use_ssl              = intval($_data['use_ssl']);
+          $port                 = $_data['port'];
+          $host                 = strtolower($_data['host']);
+          $password             = $_data['password'];
+          $user                 = $_data['user'];
+          $protocol             = $_data['protocol'];
+          $mins_interval        = $_data['mins_interval'];
+          if (!filter_var($port, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1, 'max_range' => 65535)))) {
+            $_SESSION['return'][] = array(
+              'type' => 'danger',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => 'access_denied'
+            );
+            return false;
+          }
+          if (!filter_var($mins_interval, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1, 'max_range' => 3600)))) {
+            $_SESSION['return'][] = array(
+              'type' => 'danger',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => 'access_denied'
+            );
+            return false;
+          }
+          if (!is_valid_domain_name($host)) {
+           $_SESSION['return'][] = array(
+              'type' => 'danger',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => 'access_denied'
+            );
+            return false;
+          }
+          $stmt = $pdo->prepare("SELECT '1' FROM `getmail`
+            WHERE `local_dest` = :local_dest AND `user` = :user AND `host` = :host");
+          $stmt->execute(array(':user' => $user, ':local_dest' => $username, ':host' => $host));
+          $num_results = count($stmt->fetchAll(PDO::FETCH_ASSOC));
+          if ($num_results != 0) {
+            $_SESSION['return'][] = array(
+              'type' => 'danger',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => array('object_exists', htmlspecialchars($host1 . ' / ' . $user1))
+            );
+            return false;
+          }
+          $stmt = $pdo->prepare("INSERT INTO `getmail` (`local_dest`, `delete_mail`, `host`, `user`, `password`, `mins_interval`, `port`, `read_all`, `protocol`, `use_ssl`, `active`)
+            VALUES (:local_dest, :delete_mail, :host, :user, :password, :mins_interval, :port, :read_all, :protocol, :use_ssl, :active)");
+          $stmt->execute(array(
+            ':local_dest' => $username,
+            ':delete_mail' => $delete,
+            ':host' => $host,
+            ':user' => $user,
+            ':password' => $password,
+            ':mins_interval' => $mins_interval,
+            ':port' => $port,
+            ':read_all' => $read_all,
+            ':protocol' => $protocol,
+            ':use_ssl' => $use_ssl,
+            ':active' => $active,
+          ));
+          $_SESSION['return'][] = array(
+            'type' => 'success',
+            'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+            'msg' => array('mailbox_modified', $username)
+          );
+        break;
         case 'domain':
           if ($_SESSION['mailcow_cc_role'] != "admin") {
             $_SESSION['return'][] = array(
@@ -1233,7 +1333,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             ':active' => $active
           ));
 
-          
+
           if (isset($_data['acl'])) {
             $_data['acl'] = (array)$_data['acl'];
             $_data['spam_alias'] = (in_array('spam_alias', $_data['acl'])) ? 1 : 0;
@@ -1265,14 +1365,13 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $_data['quarantine_attachments'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_quarantine_attachments']);
             $_data['quarantine_notification'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_quarantine_notification']);
             $_data['quarantine_category'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_quarantine_category']);
-            $_data['app_passwds'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_app_passwds']);     
-            $_data['pw_reset'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_pw_reset']);     
+            $_data['app_passwds'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_app_passwds']);$_data['pw_reset'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_pw_reset']);
           }
 
           try {
-            $stmt = $pdo->prepare("INSERT INTO `user_acl` 
+            $stmt = $pdo->prepare("INSERT INTO `user_acl`
               (`username`, `spam_alias`, `tls_policy`, `spam_score`, `spam_policy`, `delimiter_action`, `syncjobs`, `eas_reset`, `sogo_profile_reset`,
-                `pushover`, `quarantine`, `quarantine_attachments`, `quarantine_notification`, `quarantine_category`, `app_passwds`, `pw_reset`) 
+                `pushover`, `quarantine`, `quarantine_attachments`, `quarantine_notification`, `quarantine_category`, `app_passwds`, `pw_reset`)
               VALUES (:username, :spam_alias, :tls_policy, :spam_score, :spam_policy, :delimiter_action, :syncjobs, :eas_reset, :sogo_profile_reset,
                 :pushover, :quarantine, :quarantine_attachments, :quarantine_notification, :quarantine_category, :app_passwds, :pw_reset) ");
             $stmt->execute(array(
@@ -1295,7 +1394,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             ));
           }
           catch (PDOException $e) {
-            $_SESSION['return'][] = array(
+              $_SESSION['return'][] = array(
               'type' => 'danger',
               'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
               'msg' => $e->getMessage()
@@ -1467,7 +1566,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             );
             return false;
           }
-          
+
           // check attributes
           $attr = array();
           $attr['tags']                       = (isset($_data['tags'])) ? $_data['tags'] : array();
@@ -1557,7 +1656,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $attr['pop3_access'] = (in_array('pop3', $_data['protocol_access'])) ? 1 : 0;
             $attr['smtp_access'] = (in_array('smtp', $_data['protocol_access'])) ? 1 : 0;
             $attr['sieve_access'] = (in_array('sieve', $_data['protocol_access'])) ? 1 : 0;
-          }   
+          }
           else {
             $attr['imap_access'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['imap_access']);
             $attr['pop3_access'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['pop3_access']);
@@ -2109,7 +2208,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
                 );
                 return false;
               }
-  
+
               // check if param is whitelisted
               if (!in_array(strtolower($param), $GLOBALS["IMAPSYNC_OPTIONS"]["whitelist"])){
                 // bad option
@@ -2224,6 +2323,103 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               ':timeout2' => $timeout2,
               ':subscribeall' => $subscribeall,
               ':dry' => $dry,
+              ':active' => $active,
+            ));
+            $_SESSION['return'][] = array(
+              'type' => 'success',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => array('mailbox_modified', $username)
+            );
+          }
+        break;
+        case 'retrievaljob':
+          if (!is_array($_data['id'])) {
+            $ids = array();
+            $ids[] = $_data['id'];
+          }
+          else {
+            $ids = $_data['id'];
+          }
+          if (!isset($_SESSION['acl']['retrievaljobs']) || $_SESSION['acl']['retrievaljobs'] != "1" ) {
+             $_SESSION['return'][] = array(
+               'type' => 'danger',
+               'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+               'msg' => 'access_denied'
+             );
+            return false;
+          }
+          foreach ($ids as $id) {
+            $is_now = mailbox('get', 'retrievaljob_details', $id, array('with_password'));
+            if (!empty($is_now)) {
+              $username = $is_now['local_dest'];
+              $user = (!empty($_data['user'])) ? $_data['user'] : $is_now['user'];
+              $active = (isset($_data['active'])) ? intval($_data['active']) : $is_now['active_int'];
+              $last_run = (isset($_data['last_run'])) ? NULL : $is_now['last_run'];
+              $delete_mail = (isset($_data['delete_mail'])) ? intval($_data['delete_mail']) : $is_now['delete_mail'];
+              $read_all = (isset($_data['read_all'])) ? intval($_data['read_all']) : $is_now['read_all'];
+              $protocol = (!empty($_data['protocol'])) ? $_data['protocol'] : $is_now['protocol'];
+              $use_ssl = (isset($_data['use_ssl'])) ? intval($_data['use_ssl']) : $is_now['use_ssl'];
+              $port = (!empty($_data['port'])) ? $_data['port'] : $is_now['port'];
+              $password = (!empty($_data['password'])) ? $_data['password'] : $is_now['password'];
+              $host = (!empty($_data['host'])) ? $_data['host'] : $is_now['host'];
+              $mins_interval = (!empty($_data['mins_interval'])) ? $_data['mins_interval'] : $is_now['mins_interval'];
+            }
+            else {
+              $_SESSION['return'][] = array(
+                'type' => 'danger',
+                'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+                'msg' => 'access_denied'
+              );
+              continue;
+            }
+            if (!filter_var($port, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1, 'max_range' => 65535)))) {
+              $_SESSION['return'][] = array(
+                'type' => 'danger',
+                'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+                'msg' => 'access_denied'
+              );
+              continue;
+            }
+            if (!filter_var($mins_interval, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1, 'max_range' => 3600)))) {
+              $_SESSION['return'][] = array(
+                'type' => 'danger',
+                'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+                'msg' => 'access_denied'
+              );
+              continue;
+            }
+            if (!is_valid_domain_name($host)) {
+              $_SESSION['return'][] = array(
+                'type' => 'danger',
+                'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+                'msg' => 'access_denied'
+              );
+              continue;
+            }
+            $stmt = $pdo->prepare("UPDATE `getmail` SET `delete_mail` = :delete_mail,
+              `read_all` = :read_all,
+              `use_ssl` = :use_ssl,
+              `protocol` = :protocol,
+              `host` = :host,
+              `last_run` = :last_run,
+              `user` = :user,
+              `password` = :password,
+              `mins_interval` = :mins_interval,
+              `port` = :port,
+              `active` = :active
+                WHERE `id` = :id");
+            $stmt->execute(array(
+              ':delete_mail' => $delete_mail,
+              ':read_all' => $read_all,
+              ':use_ssl' => $use_ssl,
+              ':protocol' => $protocol,
+              ':id' => $id,
+              ':host' => $host,
+              ':user' => $user,
+              ':password' => $password,
+              ':last_run' => $last_run,
+              ':mins_interval' => $mins_interval,
+              ':port' => $port,
               ':active' => $active,
             ));
             $_SESSION['return'][] = array(
@@ -2802,11 +2998,11 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             // check name
             if ($is_now["template"] == "Default" && $is_now["template"] != $_data["template"]){
               // keep template name of Default template
-              $_data["template"]                   = $is_now["template"]; 
+              $_data["template"]                   = $is_now["template"];
             }
             else {
-              $_data["template"]                   = (isset($_data["template"])) ? $_data["template"] : $is_now["template"]; 
-            }   
+              $_data["template"]                   = (isset($_data["template"])) ? $_data["template"] : $is_now["template"];
+            }
             // check attributes
             $attr = array();
             $attr['tags']                       = (isset($_data['tags'])) ? $_data['tags'] : array();
@@ -2833,10 +3029,10 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               ":id" => $id ,
               ":template" => $_data["template"] ,
               ":attributes" => json_encode($attr)
-            )); 
+            ));
           }
 
-  
+
           $_SESSION['return'][] = array(
             'type' => 'success',
             'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
@@ -3192,7 +3388,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
                 ':tag_name' => $tag,
               ));
             }
-            
+
             $_SESSION['return'][] = array(
               'type' => 'success',
               'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
@@ -3235,11 +3431,11 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             // check name
             if ($is_now["template"] == "Default" && $is_now["template"] != $_data["template"]){
               // keep template name of Default template
-              $_data["template"]                   = $is_now["template"]; 
+              $_data["template"]                   = $is_now["template"];
             }
             else {
-              $_data["template"]                   = (isset($_data["template"])) ? $_data["template"] : $is_now["template"]; 
-            }   
+              $_data["template"]                   = (isset($_data["template"])) ? $_data["template"] : $is_now["template"];
+            }
             // check attributes
             $attr = array();
             $attr["quota"]                       = isset($_data['quota']) ? intval($_data['quota']) * 1048576 : 0;
@@ -3259,11 +3455,11 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               $attr['pop3_access'] = (in_array('pop3', $_data['protocol_access'])) ? 1 : 0;
               $attr['smtp_access'] = (in_array('smtp', $_data['protocol_access'])) ? 1 : 0;
               $attr['sieve_access'] = (in_array('sieve', $_data['protocol_access'])) ? 1 : 0;
-            }          
-            else { 
+            }
+            else {
               foreach ($is_now as $key => $value){
                 $attr[$key] = $is_now[$key];
-              }    
+              }
             }
             if (isset($_data['acl'])) {
               $_data['acl'] = (array)$_data['acl'];
@@ -3282,10 +3478,10 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               $attr['acl_quarantine_category'] = (in_array('quarantine_category', $_data['acl'])) ? 1 : 0;
               $attr['acl_app_passwds'] = (in_array('app_passwds', $_data['acl'])) ? 1 : 0;
               $attr['acl_pw_reset'] = (in_array('pw_reset', $_data['acl'])) ? 1 : 0;
-            } else {    
+            } else {
               foreach ($is_now as $key => $value){
                 $attr[$key] = $is_now[$key];
-              }        
+              }
             }
 
 
@@ -3297,7 +3493,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               ":id" => $id ,
               ":template" => $_data["template"] ,
               ":attributes" => json_encode($attr)
-            )); 
+            ));
           }
 
 
@@ -3326,7 +3522,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               );
               continue;
             }
-            $is_now = mailbox('get', 'mailbox_details', $mailbox);            
+            $is_now = mailbox('get', 'mailbox_details', $mailbox);
             if(!empty($is_now)){
               if (!hasDomainAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $is_now['domain'])) {
                 $_SESSION['return'][] = array(
@@ -3353,15 +3549,15 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $stmt->execute(array(
               ":username" => $mailbox,
               ":custom_attributes" => json_encode($attributes)
-            ));             
-            
+            ));
+
             $_SESSION['return'][] = array(
               'type' => 'success',
               'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
               'msg' => array('mailbox_modified', $mailbox)
             );
           }
-          
+
           return true;
         break;
         case 'resource':
@@ -3443,7 +3639,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             );
           }
         break;
-        case 'domain_wide_footer':  
+        case 'domain_wide_footer':
           if (!is_array($_data['domains'])) {
             $domains = array();
             $domains[] = $_data['domains'];
@@ -3696,7 +3892,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
 
             // prepend domain to array
             $params = array();
-            foreach ($tags as $key => $val){ 
+            foreach ($tags as $key => $val){
               array_push($params, '%'.$_data.'%');
               array_push($params, '%'.$val.'%');
             }
@@ -3705,7 +3901,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
 
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             while($row = array_shift($rows)) {
-              if (hasDomainAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], explode('@', $row['username'])[1])) 
+              if (hasDomainAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], explode('@', $row['username'])[1]))
                 $mailboxes[] = $row['username'];
             }
           }
@@ -3924,6 +4120,71 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $syncjobdata[] = $row['id'];
           }
           return $syncjobdata;
+        break;
+        case 'retrievaljob_details':
+          $retrievaljobdetails = array();
+          if (!is_numeric($_data)) {
+            return false;
+          }
+          if (isset($_extra) && in_array('no_log', $_extra)) {
+            $field_query = $pdo->query('SHOW FIELDS FROM `getmail` WHERE FIELD NOT IN ("returned_text", "password")');
+            $fields = $field_query->fetchAll(PDO::FETCH_ASSOC);
+            while($field = array_shift($fields)) {
+              $shown_fields[] = $field['Field'];
+            }
+            $stmt = $pdo->prepare("SELECT " . implode(',', $shown_fields) . ",
+              `active` AS `active_int`,
+              CASE `active` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `active`
+                FROM `getmail` WHERE id = :id");
+          }
+          elseif (isset($_extra) && in_array('with_password', $_extra)) {
+            $stmt = $pdo->prepare("SELECT *,
+              `active` AS `active_int`,
+              CASE `active` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `active`
+                FROM `getmail` WHERE id = :id");
+          }
+          else {
+            $field_query = $pdo->query('SHOW FIELDS FROM `getmail` WHERE FIELD NOT IN ("password")');
+            $fields = $field_query->fetchAll(PDO::FETCH_ASSOC);
+            while($field = array_shift($fields)) {
+              $shown_fields[] = $field['Field'];
+            }
+            $stmt = $pdo->prepare("SELECT " . implode(',', $shown_fields) . ",
+              `active` AS `active_int`,
+              CASE `active` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `active`
+                FROM `getmail` WHERE id = :id");
+          }
+          $stmt->execute(array(':id' => $_data));
+          $retrievaljobdetails = $stmt->fetch(PDO::FETCH_ASSOC);
+          if (!empty($retrievaljobdetails['returned_text'])) {
+            $retrievaljobdetails['log'] = $retrievaljobdetails['returned_text'];
+          }
+          else {
+            $retrievaljobdetails['log'] = '';
+          }
+          unset($retrievaljobdetails['returned_text']);
+          if (!hasMailboxObjectAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $retrievaljobdetails['local_dest'])) {
+            return false;
+          }
+          return $retrievaljobdetails;
+        break;
+        case 'retrievaljobs':
+          $retrievaljobdata = array();
+          if (isset($_data) && filter_var($_data, FILTER_VALIDATE_EMAIL)) {
+            if (!hasMailboxObjectAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $_data)) {
+              return false;
+            }
+          }
+          else {
+            $_data = $_SESSION['mailcow_cc_username'];
+          }
+          $stmt = $pdo->prepare("SELECT `id` FROM `getmail` WHERE `local_dest` = :username");
+          $stmt->execute(array(':username' => $_data));
+          $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+          while($row = array_shift($rows)) {
+            $retrievaljobdata[] = $row['id'];
+          }
+          return $retrievaljobdata;
         break;
         case 'spam_score':
           $curl = curl_init();
@@ -4260,7 +4521,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             while($row = array_shift($rows)) {
               if ($_SESSION['mailcow_cc_role'] == "admin")
                 $domains[] = $row['domain'];
-              elseif (hasDomainAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $row['domain'])) 
+              elseif (hasDomainAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $row['domain']))
                 $domains[] = $row['domain'];
             }
           } else {
@@ -4302,7 +4563,6 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               `description`,
               `aliases`,
               `mailboxes`,
-              `defquota`,
               `maxquota`,
               `created`,
               `modified`,
@@ -4420,19 +4680,19 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
           }
           $_data = (isset($_data)) ? intval($_data) : null;
 
-          if (isset($_data)){          
-            $stmt = $pdo->prepare("SELECT * FROM `templates` 
+          if (isset($_data)){
+            $stmt = $pdo->prepare("SELECT * FROM `templates`
               WHERE `id` = :id AND type = :type");
             $stmt->execute(array(
               ":id" => $_data,
               ":type" => "domain"
             ));
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-  
+
             if (empty($row)){
               return false;
             }
-  
+
             $row["attributes"] = json_decode($row["attributes"], true);
             return $row;
           }
@@ -4440,11 +4700,11 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $stmt = $pdo->prepare("SELECT * FROM `templates` WHERE `type` =  'domain'");
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  
+
             if (empty($rows)){
               return false;
             }
-  
+
             foreach($rows as $key => $row){
               $rows[$key]["attributes"] = json_decode($row["attributes"], true);
             }
@@ -4610,19 +4870,19 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
           }
           $_data = (isset($_data)) ? intval($_data) : null;
 
-          if (isset($_data)){          
-            $stmt = $pdo->prepare("SELECT * FROM `templates` 
+          if (isset($_data)){
+            $stmt = $pdo->prepare("SELECT * FROM `templates`
               WHERE `id` = :id AND type = :type");
             $stmt->execute(array(
               ":id" => $_data,
               ":type" => "mailbox"
             ));
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-  
+
             if (empty($row)){
               return false;
             }
-  
+
             $row["attributes"] = json_decode($row["attributes"], true);
             return $row;
           }
@@ -4752,6 +5012,46 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               'type' => 'success',
               'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
               'msg' => array('deleted_syncjob', $id)
+            );
+          }
+        break;
+        case 'retrievaljob':
+          if (!is_array($_data['id'])) {
+            $ids = array();
+            $ids[] = $_data['id'];
+          }
+          else {
+            $ids = $_data['id'];
+          }
+          if (!isset($_SESSION['acl']['retrievaljobs']) || $_SESSION['acl']['retrievaljobs'] != "1" ) {
+            $_SESSION['return'][] = array(
+              'type' => 'danger',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => 'access_denied'
+            );
+            return false;
+          }
+          foreach ($ids as $id) {
+            if (!is_numeric($id)) {
+              return false;
+            }
+            $stmt = $pdo->prepare("SELECT `local_dest` FROM `getmail` WHERE id = :id");
+            $stmt->execute(array(':id' => $id));
+            $local_dest = $stmt->fetch(PDO::FETCH_ASSOC)['local_dest'];
+            if (!hasMailboxObjectAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $local_dest)) {
+              $_SESSION['return'][] = array(
+                'type' => 'danger',
+                'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+                'msg' => 'access_denied'
+              );
+              continue;
+            }
+            $stmt = $pdo->prepare("DELETE FROM `getmail` WHERE `id`= :id");
+            $stmt->execute(array(':id' => $id));
+            $_SESSION['return'][] = array(
+              'type' => 'success',
+              'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
+              'msg' => array('deleted_retrievaljob', $id)
             );
           }
         break;
@@ -5064,7 +5364,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $ids = $_data['ids'];
           }
 
-          
+
           foreach ($ids as $id) {
             // delete template
             $stmt = $pdo->prepare("DELETE FROM `templates`
@@ -5292,6 +5592,10 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $stmt->execute(array(
               ':username' => $username
             ));
+            $stmt = $pdo->prepare("DELETE FROM `getmail` WHERE `local_dest` = :username");
+            $stmt->execute(array(
+              ':username' => $username
+            ));
             $stmt = $pdo->prepare("DELETE FROM `filterconf` WHERE `object` = :username");
             $stmt->execute(array(
               ':username' => $username
@@ -5377,7 +5681,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               );
               continue;
             }
-            
+
             update_sogo_static_view($username);
             $_SESSION['return'][] = array(
               'type' => 'success',
@@ -5404,7 +5708,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $ids = $_data['ids'];
           }
 
-          
+
           foreach ($ids as $id) {
             // delete template
             $stmt = $pdo->prepare("DELETE FROM `templates`
@@ -5413,7 +5717,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               ":id" => $id,
               ":type" => "mailbox",
               ":template" => "Default"
-            )); 
+            ));
           }
 
           $_SESSION['return'][] = array(
@@ -5487,7 +5791,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             );
           }
         break;
-        case 'tags_domain':    
+        case 'tags_domain':
           if (!is_array($_data['domain'])) {
             $domains = array();
             $domains[] = $_data['domain'];
@@ -5500,7 +5804,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
 
 
           $wasModified = false;
-          foreach ($domains as $domain) {            
+          foreach ($domains as $domain) {
             if (!is_valid_domain_name($domain)) {
               $_SESSION['return'][] = array(
                 'type' => 'danger',
@@ -5517,7 +5821,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               );
               return false;
             }
-            
+
             foreach($tags as $tag){
               // delete tag
               $wasModified = true;
@@ -5572,7 +5876,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             // delete tags
             foreach($tags as $tag){
               $wasModified = true;
-              
+
               $stmt = $pdo->prepare("DELETE FROM `tags_mailbox` WHERE `username` = :username AND `tag_name` = :tag_name");
               $stmt->execute(array(
                 ':username' => $username,
