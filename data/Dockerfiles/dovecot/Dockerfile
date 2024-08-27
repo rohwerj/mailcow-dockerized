@@ -1,12 +1,13 @@
-FROM alpine:3.19
-LABEL maintainer "The Infrastructure Company GmbH <info@servercow.de>"
+FROM alpine:3.20
+
+LABEL maintainer="The Infrastructure Company GmbH <info@servercow.de>"
 
 # renovate: datasource=github-releases depName=tianon/gosu versioning=semver-coerced extractVersion=^(?<version>.*)$
 ARG GOSU_VERSION=1.16
 ARG GETMAIL_VERSION=6.18.14
 
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 # Add groups and users before installing Dovecot to not break compatibility
 RUN addgroup -g 5000 vmail \
@@ -25,6 +26,7 @@ RUN addgroup -g 5000 vmail \
   envsubst \
   ca-certificates \
   curl \
+  coreutils \
   jq \
   lua \
   lua-cjson \
@@ -63,7 +65,7 @@ RUN addgroup -g 5000 vmail \
   perl-package-stash-xs \
   perl-par-packer \
   perl-parse-recdescent \
-  perl-lockfile-simple --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/ \
+  perl-lockfile-simple \
   libproc \
   perl-readonly \
   perl-regexp-common \
@@ -105,12 +107,11 @@ RUN addgroup -g 5000 vmail \
   dovecot-pigeonhole-plugin \
   dovecot-pop3d \
   dovecot-fts-solr \
+  dovecot-fts-flatcurve \
   && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) \
   && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$arch" \
   && chmod +x /usr/local/bin/gosu \
   && gosu nobody true
-
-# RUN cpan LockFile::Simple
 
 RUN curl -L https://github.com/getmail6/getmail6/archive/refs/tags/v${GETMAIL_VERSION}.tar.gz | tar xvz \
   && cd getmail6-${GETMAIL_VERSION} \
@@ -137,7 +138,8 @@ COPY stop-supervisor.sh /usr/local/sbin/stop-supervisor.sh
 COPY quarantine_notify.py /usr/local/bin/quarantine_notify.py
 COPY quota_notify.py /usr/local/bin/quota_notify.py
 COPY repl_health.sh /usr/local/bin/repl_health.sh
+COPY optimize-fts.sh /usr/local/bin/optimize-fts.sh
 COPY rspamc.py /usr/local/bin/rspamc.py
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

@@ -831,5 +831,5 @@ jQuery(function($){
   onVisible("[id^=sync_job_table]", () => draw_sync_job_table());
   onVisible("[id^=retrieval_job_table]", () => draw_retrieval_job_table());
   onVisible("[id^=app_passwd_table]", () => draw_app_passwd_table());
-  last_logins('get');
+  onVisible("[id^=recent-logins]", () => last_logins('get'));
 });
