@@ -1,5 +1,5 @@
 FROM php:8.2-fpm-alpine3.18
-LABEL maintainer "Jan Rohwer <jan@rohwer.online>"
+LABEL maintainer = "Jan Rohwer <jan@rohwer.online>"
 
 RUN apk add -U --no-cache bash \
 	icu-dev \
