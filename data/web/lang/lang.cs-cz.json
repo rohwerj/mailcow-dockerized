@@ -28,7 +28,8 @@
         "spam_score": "Skóre spamu",
         "syncjobs": "Synchronizační úlohy",
         "tls_policy": "Pravidla TLS",
-        "unlimited_quota": "Neomezené kvóty pro mailové schránky"
+        "unlimited_quota": "Neomezené kvóty pro mailové schránky",
+        "pw_reset": "Povolit obnovení hesla uživatele mailcow"
     },
     "add": {
         "activate_filter_warn": "Pokud je zaškrtlá volba \"Aktivní\", budou všechny ostatní filtry deaktivovány.",
@@ -346,7 +347,14 @@
         "f2b_ban_time_increment": "Délka banu je prodlužována s každým dalším banem",
         "f2b_max_ban_time": "Maximální délka banu (s)",
         "cors_settings": "Nastavení CORS",
-        "queue_unban": "zrušit ban"
+        "queue_unban": "zrušit ban",
+        "password_reset_info": "Pokud není zadán žádný e-mail pro obnovení, nelze tuto funkci použít.",
+        "password_reset_settings": "Nastavení obnovení hesla",
+        "password_settings": "Nastavení hesel",
+        "password_reset_tmpl_html": "HTML šablona",
+        "password_reset_tmpl_text": "Textová šablona",
+        "reset_password_vars": "<code>{{link}}</code> Vygenerovaný odkaz pro obnovení hesla<br><code>{{username}}</code> Název mailboxu uživatele, který požádal o resetování hesla.<br><code>{{username2}}</code> Název schránky pro obnovení<br><code>{{date}}</code> Datum podání žádosti o obnovení hesla<br><code>{{token_lifetime}}</code> Délka životnosti tokenu v minutách<br><code>{{hostname}}</code> Název serveru mailcow",
+        "restore_template": "Ponechte prázdné pro obnovení výchozí šablony."
     },
     "danger": {
         "access_denied": "Přístup odepřen nebo jsou neplatná data ve formuláři",
@@ -475,7 +483,10 @@
         "webauthn_publickey_failed": "Pro vybraný ověřovací prostředek nebyl uložen žádný veřejný klíč",
         "webauthn_username_failed": "Zvolený ověřovací prostředek patří k jinému účtu",
         "extended_sender_acl_denied": "chybějící ACL pro nastavení externích adres odesílatele",
-        "demo_mode_enabled": "Demo režim je zapnutý"
+        "demo_mode_enabled": "Demo režim je zapnutý",
+        "recovery_email_failed": "Nepodařilo se odeslat e-mail pro obnovení. Obraťte se prosím na svého správce.",
+        "password_reset_invalid_user": "Mailbox nebyl nalezen nebo není nastaven žádný e-mail pro obnovu",
+        "password_reset_na": "Obnovení hesla není v současné době k dispozici. Obraťte se prosím na svého správce."
     },
     "datatables": {
         "emptyTable": "Tabulka neobsahuje žádná data",
@@ -510,7 +521,6 @@
         "external_logs": "Externí logy",
         "history_all_servers": "Záznam (všechny servery)",
         "in_memory_logs": "Logy v paměti",
-        "jvm_memory_solr": "Spotřeba paměti JVM",
         "last_modified": "Naposledy změněn",
         "log_info": "<p><b>Logy v paměti</b> jsou shromažďovány v Redis seznamech a jsou oříznuty na LOG_LINES (%d) každou minutu, aby se nepřetěžoval server.\r\n  <br>Logy v paměti nemají být trvalé. Všechny aplikace, které logují do paměti, zároveň logují i do Docker služby podle nastavení logging driveru.\r\n  <br>Logy v paměti lze použít pro ladění drobných problémů s kontejnery.</p>\r\n  <p><b>Externí logy</b> jsou shromažďovány pomocí API dané aplikace.</p>\r\n  <p><b>Statické logy</b> jsou většinou logy činností, které nejsou zaznamenávány do Docker služby, ale přesto je dobré je schraňovat (výjimkou jsou logy API).</p>",
         "login_time": "Čas",
@@ -519,8 +529,6 @@
         "restart_container": "Restartovat",
         "service": "Služba",
         "size": "Velikost",
-        "solr_dead": "Solr se spouští, je vypnutý nebo spadl.",
-        "solr_status": "Stav Solr",
         "started_at": "Spuštěn",
         "started_on": "Spuštěno",
         "static_logs": "Statické logy",
@@ -648,8 +656,8 @@
         "sieve_desc": "Krátký popis",
         "sieve_type": "Typ filtru",
         "skipcrossduplicates": "Přeskočit duplicitní zprávy (\"první přijde, první mele\")",
-        "sogo_access": "Udělit přímý přihlašovací přístup do služby SOGo",
-        "sogo_access_info": "Jednotné přihlášení (SSO) z mail UI zůstává funkční. Toto nastavení neovlivňuje přístup ke všem ostatním službám ani neodstraňuje či nemění stávající profil uživatele SOGo.",
+        "sogo_access": "Přímé předání na SOGo",
+        "sogo_access_info": "Po přihlášení je uživatel automaticky přesměrován do služby SOGo.",
         "sogo_visible": "Alias dostupný v SOGo",
         "sogo_visible_info": "Tato volba určuje objekty, jež lze zobrazit v SOGo (sdílené nebo nesdílené aliasy, jež ukazuje alespoň na jednu schránku).",
         "spam_alias": "Vytvořit nebo změnit dočasné aliasy",
@@ -672,12 +680,17 @@
             "auth_user": "{= auth_user =} - Ověřené uživatelské jméno zadané MTA",
             "from_user": "{= from_user =}    - uživatelská část odesílatele, např. pro \"moo@mailcow.tld\" vrátí \"moo\"",
             "from_domain": "{= from_domain =} - Doména odesílatele",
-            "from_addr": "{= from_addr =} - E-mailová adresa odesílatele"
+            "from_addr": "{= from_addr =} - E-mailová adresa odesílatele",
+            "custom": "{= foo =}         - Pokud má schránka vlastní atribut „foo“ s hodnotou „bar“, vrátí „bar“"
         },
         "domain_footer": "Patička pro celou doménu",
         "domain_footer_html": "HTML text",
         "domain_footer_plain": "Prostý text",
-        "pushover_sound": "Zvukové upozornění"
+        "pushover_sound": "Zvukové upozornění",
+        "custom_attributes": "Vlastní atributy",
+        "footer_exclude": "Vyloučit ze zápatí",
+        "domain_footer_skip_replies": "Ignorovat patičku u odpovědí na e-maily",
+        "password_recovery_email": "E-mail pro obnovu hesla"
     },
     "fido2": {
         "confirm": "Potvrdit",
@@ -731,9 +744,16 @@
         "fido2_webauthn": "FIDO2/WebAuthn Login",
         "login": "Přihlásit",
         "mobileconfig_info": "Ke stažení profilového souboru se přihlaste jako uživatel schránky.",
-        "other_logins": "Přihlášení klíčem",
+        "other_logins": "nebo přihlásit s",
         "password": "Heslo",
-        "username": "Uživatelské jméno"
+        "username": "Uživatelské jméno",
+        "back_to_mailcow": "Zpět do mailcow",
+        "forgot_password": "> Zapomněli jste heslo?",
+        "invalid_pass_reset_token": "Token pro obnovení hesla je neplatný nebo jeho platnost vypršela.<br>Prosím, vyžádejte si nový odkaz pro obnovení hesla.",
+        "new_password": "Nové heslo",
+        "new_password_confirm": "Ověření nového hesla",
+        "reset_password": "Obnovit heslo",
+        "request_reset_password": "Požádat o změnu hesla"
     },
     "mailbox": {
         "action": "Akce",
@@ -849,7 +869,7 @@
         "recipient_map": "Mapa příjemce",
         "recipient_map_info": "Mapy příjemců slouží k nahrazení cílové adresy zprávy před doručením.",
         "recipient_map_new": "Nový přijemce",
-        "recipient_map_new_info": "Cílová adresa mapy příjemce musí být platná emailová adresa.",
+        "recipient_map_new_info": "Cílová adresa mapy příjemce musí být emailová adresa nebo název domény.",
         "recipient_map_old": "Původní příjemce",
         "recipient_map_old_info": "Původní příjemce musí být platná emailová adresa nebo název domény.",
         "recipient_maps": "Mapy příjemců",
@@ -996,9 +1016,7 @@
     },
     "start": {
         "help": "Zobrazit/skrýt panel nápovědy",
-        "imap_smtp_server_auth_info": "Použijte celou e-mailovou adresu a zvolte způsob ověření PLAIN.<br>\r\nPřihlašovací údaje budou zašifrovány na straně serveru.",
-        "mailcow_apps_detail": "Použijte aplikace pro přístup k e-mailům, kalendáři, kontaktům atd.",
-        "mailcow_panel_detail": "<b>Správci domén</b> mohou vytvářet, upravovat nebo mazat schránky a aliasy, upravovat parametry domén a zobrazovat další informace o svých přidělených doménách.<br>\r\n<b>Uživatelé</b> mohou vytvářet dočasné aliasy (spam aliases), měnit svá hesla a nastavovat filtr spamu."
+        "imap_smtp_server_auth_info": "Použijte celou e-mailovou adresu a zvolte způsob ověření PLAIN.<br>\r\nPřihlašovací údaje budou zašifrovány na straně serveru."
     },
     "success": {
         "acl_saved": "ACL pro objekt %s uloženo",
@@ -1081,7 +1099,8 @@
         "verified_webauthn_login": "WebAuthn přihlášení ověřeno",
         "verified_yotp_login": "Yubico OTP přihlášení ověřeno",
         "cors_headers_edited": "Nastavení CORS byla uložena",
-        "domain_footer_modified": "Změny patičky domény %s byly uloženy"
+        "domain_footer_modified": "Změny patičky domény %s byly uloženy",
+        "recovery_email_sent": "E-mail k obnovení byl odeslán na adresu %s"
     },
     "tfa": {
         "api_register": "%s používá Yubico Cloud API. Prosím získejte API klíč pro své Yubico <a href=\"https://upgrade.yubico.com/getapikey/\" target=\"_blank\">ZDE</a>",
@@ -1140,10 +1159,11 @@
         "created_on": "Vytvoreno",
         "daily": "Každý den",
         "day": "den",
+        "description": "Popis",
         "delete_ays": "Potvrďte odstranění.",
         "direct_aliases": "Přímé aliasy",
         "direct_aliases_desc": "Na přímé aliasy se uplatňuje filtr spamu a nastavení pravidel TLS",
-        "direct_protocol_access": "Tento uživatel mailové schránky má <b>přímý externí přístup</b> k následujícím protokolům a aplikacím. Toto nastavení je řízeno správcem. Pro udělení přístupu k jednotlivým protokolům a aplikacím lze vytvořit hesla aplikací.<br>Tlačítko \" Přihlaste se do webmailu\" zajišťuje jednotné přihlášení k SOGo a je vždy k dispozici.",
+        "direct_protocol_access": "Tento uživatel mailové schránky má <b>přímý externí přístup</b> k následujícím protokolům a aplikacím. Toto nastavení je řízeno správcem. Pro udělení přístupu k jednotlivým protokolům a aplikacím lze vytvořit hesla aplikací.<br>Tlačítko \"Webmailu\" zajišťuje jednotné přihlášení k SOGo a je vždy k dispozici.",
         "eas_reset": "Smazat mezipaměť zařízení ActiveSync",
         "eas_reset_help": "Obnovení mezipaměti zařízení pomůže zpravidla obnovit poškozený profil služby ActiveSync.<br><b>Upozornění:</b> Všechna data budou opětovně stažena!",
         "eas_reset_now": "Smazat",
@@ -1184,7 +1204,7 @@
         "no_last_login": "Žádný záznam o přihlášení",
         "no_record": "Žádný záznam",
         "open_logs": "Otevřít záznam",
-        "open_webmail_sso": "Přihlaste se do webmailu",
+        "open_webmail_sso": "Webmailu",
         "password": "Heslo",
         "password_now": "Současné heslo (pro potvrzení změny)",
         "password_repeat": "Heslo (znovu)",
@@ -1268,7 +1288,9 @@
         "with_app_password": "s heslem aplikace",
         "year": "rok",
         "years": "let",
-        "pushover_sound": "Zvukové upozornění"
+        "pushover_sound": "Zvukové upozornění",
+        "password_reset_info": "Pokud není zadán e-mail pro obnovení hesla, nelze tuto funkci použít.",
+        "pw_recovery_email": "E-mail pro obnovení hesla"
     },
     "warning": {
         "cannot_delete_self": "Nelze smazat právě přihlášeného uživatele",

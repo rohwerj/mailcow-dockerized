@@ -85,11 +85,10 @@ def refreshF2bregex():
     f2bregex[3] = r'warning: .*\[([0-9a-f\.:]+)\]: SASL .+ authentication failed: (?!.*Connection lost to authentication server).+'
     f2bregex[4] = r'warning: non-SMTP command from .*\[([0-9a-f\.:]+)]:.+'
     f2bregex[5] = r'NOQUEUE: reject: RCPT from \[([0-9a-f\.:]+)].+Protocol error.+'
-    f2bregex[6] = r'-login: Disconnected.+ \(auth failed, .+\): user=.*, method=.+, rip=([0-9a-f\.:]+),'
-    f2bregex[7] = r'-login: Aborted login.+ \(auth failed .+\): user=.+, rip=([0-9a-f\.:]+), lip.+'
-    f2bregex[8] = r'-login: Aborted login.+ \(tried to use disallowed .+\): user=.+, rip=([0-9a-f\.:]+), lip.+'
-    f2bregex[9] = r'SOGo.+ Login from \'([0-9a-f\.:]+)\' for user .+ might not have worked'
-    f2bregex[10] = r'([0-9a-f\.:]+) \"GET \/SOGo\/.* HTTP.+\" 403 .+'
+    f2bregex[6] = r'\w+\([^,]+,([0-9a-f\.:]+),<[^>]+>\): Password mismatch \(SHA1 of given password: [a-f0-9]+\)'
+    f2bregex[7] = r'\w+\([^,]+,([0-9a-f\.:]+),<[^>]+>\): unknown user \(SHA1 of given password: [a-f0-9]+\)'
+    f2bregex[8] = r'SOGo.+ Login from \'([0-9a-f\.:]+)\' for user .+ might not have worked'
+    f2bregex[9] = r'([0-9a-f\.:]+) \"GET \/SOGo\/.* HTTP.+\" 403 .+'
     r.set('F2B_REGEX', json.dumps(f2bregex, ensure_ascii=False))
   else:
     try:
@@ -106,7 +105,7 @@ def get_ip(address):
     ip = ip.ipv4_mapped
   if ip.is_private or ip.is_loopback:
     return False
-  
+
   return ip
 
 def ban(address):
@@ -434,9 +433,9 @@ if __name__ == '__main__':
       redis_slaveof_ip = os.getenv('REDIS_SLAVEOF_IP', '')
       redis_slaveof_port = os.getenv('REDIS_SLAVEOF_PORT', '')
       if "".__eq__(redis_slaveof_ip):
-        r = redis.StrictRedis(host=os.getenv('IPV4_NETWORK', '172.22.1') + '.249', decode_responses=True, port=6379, db=0)
+        r = redis.StrictRedis(host=os.getenv('IPV4_NETWORK', '172.22.1') + '.249', decode_responses=True, port=6379, db=0, password=os.environ['REDISPASS'])
       else:
-        r = redis.StrictRedis(host=redis_slaveof_ip, decode_responses=True, port=redis_slaveof_port, db=0)
+        r = redis.StrictRedis(host=redis_slaveof_ip, decode_responses=True, port=redis_slaveof_port, db=0, password=os.environ['REDISPASS'])
       r.ping()
       pubsub = r.pubsub()
     except Exception as ex:
@@ -452,7 +451,7 @@ if __name__ == '__main__':
   # clear bans in redis
   r.delete('F2B_ACTIVE_BANS')
   r.delete('F2B_PERM_BANS')
-  
+
   refreshF2boptions()
 
   watch_thread = Thread(target=watch)
