@@ -1182,8 +1182,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             $_data['quarantine_attachments'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_quarantine_attachments']);
             $_data['quarantine_notification'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_quarantine_notification']);
             $_data['quarantine_category'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_quarantine_category']);
-            $_data['app_passwds'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_app_passwds']);
-            $_data['pw_reset'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_pw_reset']);
+            $_data['app_passwds'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_app_passwds']);$_data['pw_reset'] = intval($MAILBOX_DEFAULT_ATTRIBUTES['acl_pw_reset']);
           }
 
           try {
@@ -1212,7 +1211,7 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
             ));
           }
           catch (PDOException $e) {
-            $_SESSION['return'][] = array(
+              $_SESSION['return'][] = array(
               'type' => 'danger',
               'log' => array(__FUNCTION__, $_action, $_type, $_data_log, $_attr),
               'msg' => $e->getMessage()
@@ -4283,6 +4282,71 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
           }
           return false;
         break;
+        case 'retrievaljob_details':
+          $retrievaljobdetails = array();
+          if (!is_numeric($_data)) {
+            return false;
+          }
+          if (isset($_extra) && in_array('no_log', $_extra)) {
+            $field_query = $pdo->query('SHOW FIELDS FROM `getmail` WHERE FIELD NOT IN ("returned_text", "password")');
+            $fields = $field_query->fetchAll(PDO::FETCH_ASSOC);
+            while($field = array_shift($fields)) {
+              $shown_fields[] = $field['Field'];
+            }
+            $stmt = $pdo->prepare("SELECT " . implode(',', $shown_fields) . ",
+              `active` AS `active_int`,
+              CASE `active` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `active`
+                FROM `getmail` WHERE id = :id");
+          }
+          elseif (isset($_extra) && in_array('with_password', $_extra)) {
+            $stmt = $pdo->prepare("SELECT *,
+              `active` AS `active_int`,
+              CASE `active` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `active`
+                FROM `getmail` WHERE id = :id");
+          }
+          else {
+            $field_query = $pdo->query('SHOW FIELDS FROM `getmail` WHERE FIELD NOT IN ("password")');
+            $fields = $field_query->fetchAll(PDO::FETCH_ASSOC);
+            while($field = array_shift($fields)) {
+              $shown_fields[] = $field['Field'];
+            }
+            $stmt = $pdo->prepare("SELECT " . implode(',', $shown_fields) . ",
+              `active` AS `active_int`,
+              CASE `active` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `active`
+                FROM `getmail` WHERE id = :id");
+          }
+          $stmt->execute(array(':id' => $_data));
+          $retrievaljobdetails = $stmt->fetch(PDO::FETCH_ASSOC);
+          if (!empty($retrievaljobdetails['returned_text'])) {
+            $retrievaljobdetails['log'] = $retrievaljobdetails['returned_text'];
+          }
+          else {
+            $retrievaljobdetails['log'] = '';
+          }
+          unset($retrievaljobdetails['returned_text']);
+          if (!hasMailboxObjectAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $retrievaljobdetails['local_dest'])) {
+            return false;
+          }
+          return $retrievaljobdetails;
+        break;
+        case 'retrievaljobs':
+          $retrievaljobdata = array();
+          if (isset($_data) && filter_var($_data, FILTER_VALIDATE_EMAIL)) {
+            if (!hasMailboxObjectAccess($_SESSION['mailcow_cc_username'], $_SESSION['mailcow_cc_role'], $_data)) {
+              return false;
+            }
+          }
+          else {
+            $_data = $_SESSION['mailcow_cc_username'];
+          }
+          $stmt = $pdo->prepare("SELECT `id` FROM `getmail` WHERE `local_dest` = :username");
+          $stmt->execute(array(':username' => $_data));
+          $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+          while($row = array_shift($rows)) {
+            $retrievaljobdata[] = $row['id'];
+          }
+          return $retrievaljobdata;
+        break;
         case 'spam_score':
           $curl = curl_init();
           curl_setopt($curl, CURLOPT_UNIX_SOCKET_PATH, '/var/lib/rspamd/rspamd.sock');
@@ -4672,7 +4736,6 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               `description`,
               `aliases`,
               `mailboxes`,
-              `defquota`,
               `maxquota`,
               `created`,
               `modified`,
@@ -5667,6 +5730,10 @@ function mailbox($_action, $_type, $_data = null, $_extra = null) {
               ':username' => $username
             ));
             $stmt = $pdo->prepare("DELETE FROM `imapsync` WHERE `user2` = :username");
+            $stmt->execute(array(
+              ':username' => $username
+            ));
+            $stmt = $pdo->prepare("DELETE FROM `getmail` WHERE `local_dest` = :username");
             $stmt->execute(array(
               ':username' => $username
             ));

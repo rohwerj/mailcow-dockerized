@@ -237,6 +237,12 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         $result = \Mailcow\Imapsync\ImapsyncModule::fromGlobals()->api->getSource($id);
         $template = 'edit/imapsync_source.twig';
     }
+    elseif (isset($_GET['retrievaljob']) &&
+      is_numeric($_GET['retrievaljob'])) {
+        $id = $_GET["retrievaljob"];
+        $result = mailbox('get', 'retrievaljob_details', $id);
+        $template = 'edit/retrievaljob.twig';
+      }
     elseif (isset($_GET['filter']) &&
       is_numeric($_GET['filter'])) {
         $id = $_GET["filter"];

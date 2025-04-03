@@ -36,6 +36,7 @@ LABEL maintainer="The Infrastructure Company GmbH <info@servercow.de>"
 
 # renovate: datasource=github-releases depName=tianon/gosu versioning=semver-coerced extractVersion=^(?<version>.*)$
 ARG GOSU_VERSION=1.20
+ARG GETMAIL_VERSION=5.15
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
@@ -142,6 +143,12 @@ RUN addgroup -g 5000 vmail \
   && chmod +x /usr/local/bin/gosu \
   && gosu nobody true
 
+RUN curl http://pyropus.ca/software/getmail/old-versions/getmail-${GETMAIL_VERSION}.tar.gz | tar xvz \
+  && cd getmail-${GETMAIL_VERSION} \
+  && python setup.py install \
+  && cd .. \
+  && rm -rf getmail-${GETMAIL_VERSION}
+
 # Dovecot's MySQL driver reads [client] from /etc/my.cnf, Connector/C ignores the !includedir there
 COPY client.cnf /etc/my.cnf
 COPY trim_logs.sh /usr/local/bin/trim_logs.sh
@@ -150,6 +157,7 @@ COPY syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 COPY syslog-ng-redis_slave.conf /etc/syslog-ng/syslog-ng-redis_slave.conf
 COPY imapsync /usr/local/bin/imapsync
 COPY imapsync_runner.py /usr/local/bin/imapsync_runner.py
+COPY getmail_runner.pl /usr/local/bin/getmail_runner.pl
 COPY report-spam.sieve /usr/lib/dovecot/sieve/report-spam.sieve
 COPY report-ham.sieve /usr/lib/dovecot/sieve/report-ham.sieve
 COPY rspamd-pipe-ham /usr/lib/dovecot/sieve/rspamd-pipe-ham
@@ -163,6 +171,7 @@ COPY quarantine_notify.py /usr/local/bin/quarantine_notify.py
 COPY quota_notify.py /usr/local/bin/quota_notify.py
 COPY repl_health.sh /usr/local/bin/repl_health.sh
 COPY optimize-fts.sh /usr/local/bin/optimize-fts.sh
+COPY rspamc.py /usr/local/bin/rspamc.py
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
