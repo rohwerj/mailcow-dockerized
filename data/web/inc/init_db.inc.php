@@ -480,6 +480,7 @@ function init_db_schema()
           "spam_policy" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "delimiter_action" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "syncjobs" => "TINYINT(1) NOT NULL DEFAULT '0'",
+          "retrievaljobs" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "eas_reset" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "sogo_profile_reset" => "TINYINT(1) NOT NULL DEFAULT '0'",
           "pushover" => "TINYINT(1) NOT NULL DEFAULT '1'",
@@ -678,6 +679,7 @@ function init_db_schema()
         "cols" => array(
           "username" => "VARCHAR(255) NOT NULL",
           "syncjobs" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "retrievaljobs" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "quarantine" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "login_as" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "sogo_access" => "TINYINT(1) NOT NULL DEFAULT '1'",
@@ -762,6 +764,33 @@ function init_db_schema()
           "last_run" => "TIMESTAMP NULL DEFAULT NULL",
           "success" => "TINYINT(1) UNSIGNED DEFAULT NULL",
           "exit_status" => "VARCHAR(50) DEFAULT NULL",
+          "created" => "DATETIME(0) NOT NULL DEFAULT NOW(0)",
+          "modified" => "DATETIME ON UPDATE CURRENT_TIMESTAMP",
+          "active" => "TINYINT(1) NOT NULL DEFAULT '0'"
+        ),
+        "keys" => array(
+          "primary" => array(
+            "" => array("id")
+          )
+        ),
+        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
+      ),
+      "getmail" => array(
+        "cols" => array(
+          "id" => "INT NOT NULL AUTO_INCREMENT",
+          "user" => "VARCHAR(255) NOT NULL",
+          "password" => "VARCHAR(255) NOT NULL",
+          "host" => "VARCHAR(255) NOT NULL",
+          "port" => "SMALLINT NOT NULL",
+          "local_dest" => "VARCHAR(255) NOT NULL",
+          "mins_interval" => "VARCHAR(50) NOT NULL DEFAULT '0'",
+          "protocol" => "ENUM('POP3','IMAP') DEFAULT 'POP3'",
+          "use_ssl" => "TINYINT(1) NOT NULL DEFAULT '0'",
+          "delete_mail" => "TINYINT(1) NOT NULL DEFAULT '0'",
+          "read_all" => "TINYINT(1) NOT NULL DEFAULT '0'",
+          "is_running" => "TINYINT(1) NOT NULL DEFAULT '0'",
+          "returned_text" => "MEDIUMTEXT",
+          "last_run" => "TIMESTAMP NULL DEFAULT NULL",
           "created" => "DATETIME(0) NOT NULL DEFAULT NOW(0)",
           "modified" => "DATETIME ON UPDATE CURRENT_TIMESTAMP",
           "active" => "TINYINT(1) NOT NULL DEFAULT '0'"
@@ -1318,7 +1347,7 @@ function init_db_schema()
     // Mitigate imapsync argument injection issue
     $pdo->query("UPDATE `imapsync` SET `custom_params` = ''
       WHERE `custom_params` LIKE '%pipemess%'
-        OR custom_params LIKE '%skipmess%'
+OR custom_params LIKE '%skipmess%'
         OR custom_params LIKE '%delete2foldersonly%'
         OR custom_params LIKE '%delete2foldersbutnot%'
         OR custom_params LIKE '%regexflag%'

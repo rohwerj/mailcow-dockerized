@@ -280,6 +280,7 @@ chmod +x /usr/lib/dovecot/sieve/rspamd-pipe-ham \
   /usr/lib/dovecot/sieve/rspamd-pipe-spam \
   /usr/local/bin/imapsync_runner.pl \
   /usr/local/bin/imapsync \
+  /usr/local/bin/getmail_runner.pl \
   /usr/local/bin/trim_logs.sh \
   /usr/local/bin/sa-rules.sh \
   /usr/local/bin/clean_q_aged.sh \
@@ -287,7 +288,8 @@ chmod +x /usr/lib/dovecot/sieve/rspamd-pipe-ham \
   /usr/local/sbin/stop-supervisor.sh \
   /usr/local/bin/quota_notify.py \
   /usr/local/bin/repl_health.sh \
-  /usr/local/bin/optimize-fts.sh
+  /usr/local/bin/optimize-fts.sh \
+  /usr/local/bin/rspamc.py
 
 # Prepare environment file for cronjobs
 printenv | sed 's/^\(.*\)$/export \1/g' > /source_env.sh
@@ -299,6 +301,11 @@ printenv | sed 's/^\(.*\)$/export \1/g' > /source_env.sh
 rm -f /tmp/imapsync_busy.lock
 IMAPSYNC_TABLE=$(mariadb --skip-ssl --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "SHOW TABLES LIKE 'imapsync'" -Bs)
 [[ ! -z ${IMAPSYNC_TABLE} ]] && mariadb --skip-ssl --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "UPDATE imapsync SET is_running='0'"
+
+# Clean stopped getmail jobs
+rm -f /tmp/getmail_busy.lock
+GETMAIL_TABLE=$(mysql --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "SHOW TABLES LIKE 'getmail'" -Bs)
+[[ ! -z ${GETMAIL_TABLE} ]] && mysql --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "UPDATE getmail SET is_running='0'"
 
 # Envsubst maildir_gc
 echo "$(envsubst < /usr/local/bin/maildir_gc.sh)" > /usr/local/bin/maildir_gc.sh
