@@ -44,6 +44,20 @@ $(document).ready(function() {
       }
     });
   });
+  $('#retrievaljobLogModal').on('show.bs.modal', function(e) {
+    var retrievaljob_id = $(e.relatedTarget).data('retrievaljob-id');
+    $.ajax({
+      url: '/inc/ajax/retrievaljob_logs.php',
+      data: { id: retrievaljob_id },
+      dataType: 'text',
+      success: function(data){
+        $(e.currentTarget).find('#logText').text(data);
+      },
+      error: function(xhr, status, error) {
+        $(e.currentTarget).find('#logText').text(xhr.responseText);
+      }
+    });
+  });
   $(".arrow-toggle").on('click', function(e) { e.preventDefault(); $(this).find('.arrow').toggleClass("animation"); });
   $("#pushover_delete").click(function() { return confirm(lang.delete_ays); });
 
@@ -408,6 +422,68 @@ jQuery(function($){
           responsivePriority: 5
         }
       ]
+    });
+  }
+  function draw_retrieval_job_table() {
+    ft_retrievaljob_table = FooTable.init('#retrieval_job_table', {
+      "columns": [
+        {"name":"chkbox","title":"","style":{"maxWidth":"60px","width":"60px","text-align":"center"},"filterable": false,"sortable": false,"type":"html"},
+        {"sorted": true,"name":"id","title":"ID","style":{"maxWidth":"60px","width":"60px","text-align":"center"}},
+        {"name":"user","title":lang.username},
+        {"name":"server_w_port","title":"Server"},
+        {"name":"protocol","title":lang.protocol,"breakpoints":"all"},
+        {"name":"mins_interval","title":lang.interval,"breakpoints":"all"},
+        {"name":"last_run","title":lang.last_run,"breakpoints":"all"},
+        {"name":"log","title":"Log"},
+        {"name":"active","filterable": false,"style":{"maxWidth":"70px","width":"70px"},"title":lang.active},
+        {"name":"is_running","filterable": false,"style":{"maxWidth":"120px","width":"100px"},"title":lang.status},
+        {"name":"action","filterable": false,"sortable": false,"style":{"text-align":"right","maxWidth":"180px","width":"180px"},"type":"html","title":lang.action,"breakpoints":"xs sm"}
+      ],
+      "empty": lang.empty,
+      "rows": $.ajax({
+        dataType: 'json',
+        url: '/api/v1/get/retrievaljobs/' + encodeURIComponent(mailcow_cc_username) + '/no_log',
+        jsonp: false,
+        error: function () {
+          console.log('Cannot draw retrieval job table');
+        },
+        success: function (data) {
+          $.each(data, function (i, item) {
+            item.user = escapeHtml(item.user);
+            item.log = '<a href="#retrievaljobLogModal" data-toggle="modal" data-retrievaljob-id="' + item.id + '">Open logs</a>'
+            item.server_w_port = escapeHtml(item.host + ':' + item.port);
+            if (acl_data.retrievaljobs === 1) {
+              item.action = '<div class="btn-group">' +
+                '<a href="/edit.php?retrievaljob=' + item.id + '" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-pencil"></span> ' + lang.edit + '</a>' +
+                '<a href="#" id="delete_selected" data-id="single-retrievaljob" data-api-url="delete/retrievaljob" data-item="' + item.id + '" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-trash"></span> ' + lang.remove + '</a>' +
+                '</div>';
+              item.chkbox = '<input type="checkbox" data-id="retrievaljob" name="multi_select" value="' + item.id + '" />';
+            }
+            else {
+              item.action = '<span>-</span>';
+              item.chkbox = '<input type="checkbox" disabled />';
+            }
+            if (item.is_running == 1) {
+              item.is_running = '<span id="active-script" class="label label-success">' + lang.running + '</span>';
+            } else {
+              item.is_running = '<span id="inactive-script" class="label label-warning">' + lang.waiting + '</span>';
+            }
+            if (!item.last_run > 0) {
+              item.last_run = lang.waiting;
+            }
+          });
+        }
+      }),
+      "paging": {
+        "enabled": true,
+        "limit": 5,
+        "size": pagination_size
+      },
+      "state": {"enabled": true},
+      "sorting": {
+        "enabled": true
+      },
+      "toggleSelector": "table tbody span.footable-toggle"
     });
   }
   function draw_app_passwd_table() {

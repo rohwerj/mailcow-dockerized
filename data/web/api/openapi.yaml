@@ -752,7 +752,8 @@ paths:
                             - testadmin
                           da_acl:
                             - syncjobs
-                            - quarantine
+                            - retrievaljobs
+                        - quarantine
                             - login_as
                             - sogo_access
                             - app_passwds
@@ -805,7 +806,8 @@ paths:
                 attr:
                   da_acl:
                     - syncjobs
-                    - quarantine
+                    - retrievaljobs
+                  - quarantine
                     - login_as
                     - sogo_access
                     - app_passwds

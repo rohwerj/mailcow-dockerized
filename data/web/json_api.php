@@ -187,9 +187,10 @@ if (isset($_GET['query'])) {
 
               // process registration data from authenticator
               try {
-                // decode base64 strings
-                $clientDataJSON = base64_decode($post->clientDataJSON);
-                $attestationObject = base64_decode($post->attestationObject);
+              // decode base64 strings
+              $clientDataJSON = base64_decode($post->clientDataJSON);
+              $attestationObject = base64_decode($post->attestationObject);
+
 
                 // processCreate($clientDataJSON, $attestationObject, $challenge, $requireUserVerification=false, $requireUserPresent=true, $failIfRootMismatch=true)
                 $data = $WebAuthn->processCreate($clientDataJSON, $attestationObject, $_SESSION['challenge'], false, true);
@@ -311,6 +312,9 @@ if (isset($_GET['query'])) {
         break;
         case "syncjob":
           process_add_return(mailbox('add', 'syncjob', $attr));
+        break;
+        case "retrievaljob":
+          process_add_return(mailbox('add', 'retrievaljob', $attr));
         break;
         case "bcc":
           process_add_return(bcc('add', $attr));
@@ -1178,6 +1182,64 @@ if (isset($_GET['query'])) {
               break;
             }
           break;
+          case "retrievaljobs":
+            switch ($object) {
+              case "all":
+                $domains = mailbox('get', 'domains');
+                if (!empty($domains)) {
+                  foreach ($domains as $domain) {
+                    $mailboxes = mailbox('get', 'mailboxes', $domain);
+                    if (!empty($mailboxes)) {
+                      foreach ($mailboxes as $mailbox) {
+                        $retrievaljobs = mailbox('get', 'retrievaljobs', $mailbox);
+                        if (!empty($retrievaljobs)) {
+                          foreach ($retrievaljobs as $retrievaljob) {
+                            if (isset($extra)) {
+                              $details = mailbox('get', 'retrievaljob_details', $retrievaljob, explode(',', $extra));
+                            }
+                            else {
+                              $details = mailbox('get', 'retrievaljob_details', $retrievaljob);
+                            }
+                            if ($details) {
+                              $data[] = $details;
+                            }
+                            else {
+                              continue;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                  process_get_return($data);
+                }
+                else {
+                  echo '{}';
+                }
+              break;
+
+              default:
+                $retrievaljobs = mailbox('get', 'retrievaljobs', $object);
+                if (!empty($retrievaljobs)) {
+                  foreach ($retrievaljobs as $retrievaljob) {
+                    if (isset($extra)) {
+                      $details = mailbox('get', 'retrievaljob_details', $retrievaljob, explode(',', $extra));
+                    }
+                    else {
+                      $details = mailbox('get', 'retrievaljob_details', $retrievaljob);
+                    }
+                    if ($details) {
+                      $data[] = $details;
+                    }
+                    else {
+                      continue;
+                    }
+                  }
+                }
+                process_get_return($data);
+              break;
+            }
+          break;
           case "active-user-sieve":
             if (isset($object)) {
               $sieve_filter = mailbox('get', 'active_user_sieve', $object);
@@ -1688,6 +1750,9 @@ if (isset($_GET['query'])) {
         case "syncjob":
           process_delete_return(mailbox('delete', 'syncjob', array('id' => $items)));
         break;
+        case "retrievaljob":
+          process_delete_return(mailbox('delete', 'retrievaljob', array('id' => $items)));
+        break;
         case "filter":
           process_delete_return(mailbox('delete', 'filter', array('id' => $items)));
         break;
@@ -1913,6 +1978,9 @@ if (isset($_GET['query'])) {
         break;
         case "syncjob":
           process_edit_return(mailbox('edit', 'syncjob', array_merge(array('id' => $items), $attr)));
+        break;
+        case "retrievaljob":
+          process_edit_return(mailbox('edit', 'retrievaljob', array_merge(array('id' => $items), $attr)));
         break;
         case "filter":
           process_edit_return(mailbox('edit', 'filter', array_merge(array('id' => $items), $attr)));
