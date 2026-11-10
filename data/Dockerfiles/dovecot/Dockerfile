@@ -36,7 +36,7 @@ LABEL maintainer="The Infrastructure Company GmbH <info@servercow.de>"
 
 # renovate: datasource=github-releases depName=tianon/gosu versioning=semver-coerced extractVersion=^(?<version>.*)$
 ARG GOSU_VERSION=1.20
-ARG GETMAIL_VERSION=6.19.10
+ARG GETMAIL_VERSION=6.21.00
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
@@ -157,7 +157,7 @@ COPY syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 COPY syslog-ng-redis_slave.conf /etc/syslog-ng/syslog-ng-redis_slave.conf
 COPY imapsync /usr/local/bin/imapsync
 COPY imapsync_runner.py /usr/local/bin/imapsync_runner.py
-COPY getmail_runner.pl /usr/local/bin/getmail_runner.pl
+COPY getmail_runner.py /usr/local/bin/getmail_runner.py
 COPY report-spam.sieve /usr/lib/dovecot/sieve/report-spam.sieve
 COPY report-ham.sieve /usr/lib/dovecot/sieve/report-ham.sieve
 COPY rspamd-pipe-ham /usr/lib/dovecot/sieve/rspamd-pipe-ham

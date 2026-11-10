@@ -1249,6 +1249,32 @@ function init_db_schema()
         "keys" => array(
           "primary" => array(
             "" => array("id")
+          ),
+          "key" => array(
+            "idx_source_id" => array("source_id"),
+            "idx_prio" => array("prio")
+          ),
+          "fkey" => array(
+            "fk_imapsync_source" => array(
+              "col" => "source_id",
+              "ref" => "imapsync_source.id",
+              "delete" => "RESTRICT",
+              "update" => "NO ACTION"
+            )
+          )
+        ),
+        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
+      ),
+      "imapsync_settings" => array(
+        "cols" => array(
+          "name" => "VARCHAR(64) NOT NULL",
+          "value" => "VARCHAR(255) NOT NULL",
+          "created" => "DATETIME(0) NOT NULL DEFAULT NOW(0)",
+          "modified" => "DATETIME ON UPDATE CURRENT_TIMESTAMP"
+        ),
+        "keys" => array(
+          "primary" => array(
+            "" => array("name")
           )
         ),
         "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
@@ -1278,32 +1304,6 @@ function init_db_schema()
         "keys" => array(
           "primary" => array(
             "" => array("id")
-          ),
-          "key" => array(
-            "idx_source_id" => array("source_id"),
-            "idx_prio" => array("prio")
-          ),
-          "fkey" => array(
-            "fk_imapsync_source" => array(
-              "col" => "source_id",
-              "ref" => "imapsync_source.id",
-              "delete" => "RESTRICT",
-              "update" => "NO ACTION"
-            )
-          )
-        ),
-        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
-      ),
-      "imapsync_settings" => array(
-        "cols" => array(
-          "name" => "VARCHAR(64) NOT NULL",
-          "value" => "VARCHAR(255) NOT NULL",
-          "created" => "DATETIME(0) NOT NULL DEFAULT NOW(0)",
-          "modified" => "DATETIME ON UPDATE CURRENT_TIMESTAMP"
-        ),
-        "keys" => array(
-          "primary" => array(
-            "" => array("name")
           )
         ),
         "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"

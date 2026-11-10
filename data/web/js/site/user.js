@@ -512,9 +512,7 @@ jQuery(function($){
           title: lang.active,
           data: 'active',
           defaultContent: '',
-          render: function (data, type) {
-            return 1==data?'<i class="bi bi-check-lg"></i>':0==data&&'<i class="bi bi-x-lg"></i>'
-          }
+          responsivePriority: 8
         },
         {
           title: lang.status,
